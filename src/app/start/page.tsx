@@ -483,7 +483,7 @@ export default function StartPage() {
                     textAlign: "center",
                     letterSpacing: "0.28em",
                     color: theme.palette.warning.main,
-                    mb: 7,
+                    mb: 2,
                     fontSize: "0.75rem",
                     fontWeight: 600,
                   }}

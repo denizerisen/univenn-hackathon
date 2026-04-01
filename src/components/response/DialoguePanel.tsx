@@ -198,6 +198,7 @@ export default function DialoguePanel({
                         isLoading || !summaryDone ? "" : activePath.description
                       }
                       instant={seenPaths.has(selected)}
+                      noScatter={!isLoading}
                       variant="body1"
                       onDone={() =>
                         setSeenPaths((prev) => new Set([...prev, selected]))

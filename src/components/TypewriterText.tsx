@@ -26,6 +26,8 @@ interface Props extends Omit<TypographyProps, "children"> {
   delay?: number;
   /** skip typing animation — reveal text instantly */
   instant?: boolean;
+  /** skip the dust-scatter exit animation — just crossfade to new text */
+  noScatter?: boolean;
   /** called once when the full text has finished typing */
   onDone?: () => void;
   sx?: SxProps<Theme>;
@@ -38,6 +40,7 @@ export default function TypewriterText({
   speed = 30,
   delay = 0,
   instant = false,
+  noScatter = false,
   onDone,
   sx,
   ...typographyProps
@@ -97,7 +100,7 @@ export default function TypewriterText({
     clearTimer();
 
     const current = displayedRef.current;
-    if (current.length > 0) {
+    if (current.length > 0 && !noScatter) {
       // Snapshot current height before clearing content
       const h = containerRef.current?.offsetHeight ?? null;
       if (h) setReservedHeight(h);

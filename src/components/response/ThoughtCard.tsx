@@ -191,35 +191,20 @@ export default function ThoughtCard({ thoughts }: Props) {
               overflow: "hidden",
             }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: alpha(theme.palette.background.paper, 0.85),
-                  borderRadius: "999px",
-                  transformOrigin: "right",
-                }}
-              >
-                <motion.div
-                  initial={{ width: "100%" }}
-                  animate={{ width: `${100 - sentimentScore(thoughts[index])}%` }}
-                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    height: "100%",
-                    borderRadius: "999px",
-                  }}
-                />
-              </motion.div>
-            </AnimatePresence>
+            {/* Mask sliding from the right — key forces remount on thought change */}
+            <motion.div
+              key={`mask-${index}`}
+              initial={{ width: "100%" }}
+              animate={{ width: `${100 - sentimentScore(thoughts[index])}%` }}
+              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] as const }}
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                height: "100%",
+                backgroundColor: alpha(theme.palette.background.paper, 0.88),
+              }}
+            />
           </Box>
         </Box>
 
