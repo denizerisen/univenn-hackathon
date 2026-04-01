@@ -1,32 +1,43 @@
 "use client";
 
 import * as React from "react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import Box from "@mui/material/Box";
 import { NextAppDirEmotionCacheProvider } from "./EmotionCache";
+import { getTheme } from "@/theme/theme";
+import { ColorModeContext } from "@/context/ColorModeContext";
 
-const theme = createTheme({
-  palette: {
-    mode: "light",
-    primary: {
-      main: "#6366f1",
-    },
-    secondary: {
-      main: "#ec4899",
-    },
-  },
-  typography: {
-    fontFamily: "var(--font-geist-sans), sans-serif",
-  },
-});
+const gradients = {
+  light: "linear-gradient(135deg, #FEFEE3 0%, #F5EDD0 100%)",
+  dark: "linear-gradient(135deg, #240046 0%, #10002b 100%)",
+};
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
+  const [mode, setMode] = React.useState<"light" | "dark">("light");
+
+  const toggleMode = React.useCallback(() => {
+    setMode((prev) => (prev === "light" ? "dark" : "light"));
+  }, []);
+
+  const theme = React.useMemo(() => getTheme(mode), [mode]);
+
   return (
-    <NextAppDirEmotionCacheProvider options={{ key: "mui" }}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </ThemeProvider>
-    </NextAppDirEmotionCacheProvider>
+    <ColorModeContext.Provider value={{ mode, toggleMode }}>
+      <NextAppDirEmotionCacheProvider options={{ key: "mui" }}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Box
+            sx={{
+              minHeight: "100vh",
+              background: gradients[mode],
+              transition: "background 0.4s ease",
+            }}
+          >
+            {children}
+          </Box>
+        </ThemeProvider>
+      </NextAppDirEmotionCacheProvider>
+    </ColorModeContext.Provider>
   );
 }
