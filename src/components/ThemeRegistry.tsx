@@ -44,6 +44,24 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
 
   const theme = React.useMemo(() => getTheme(mode), [mode]);
 
+  // Dynamic favicon based on active theme
+  React.useEffect(() => {
+    const href = isTrMode
+      ? "/favicon-fifa.png"
+      : isDark
+      ? "/favicon-8ball.png"
+      : "/favicon-leaf.png";
+
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.type = "image/png";
+    link.href = href;
+  }, [isTrMode, isDark]);
+
   return (
     <ColorModeContext.Provider value={{ mode, toggleMode, toggleTrMode, isTrMode, isDark }}>
       <NextAppDirEmotionCacheProvider options={{ key: "mui" }}>
