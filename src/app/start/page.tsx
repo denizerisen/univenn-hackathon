@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { ThoughtResponse } from "@/app/api/thought/route";
 import { motion } from "motion/react";
 import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
   IconButton,
   TextField,
@@ -47,13 +49,38 @@ const fadeUp = (delay = 0) => ({
 
 export default function StartPage() {
   const [thought, setThought] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
   const { mode, toggleMode } = useColorMode();
   const isLight = mode === "light";
 
-  const handleExplore = () => {
-    console.log("Thought to explore:", thought);
-    // TODO: router.push("/explore")
+  const handleExplore = async () => {
+    if (!thought.trim()) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/thought", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thought }),
+      });
+
+      const data = (await res.json()) as ThoughtResponse & { error?: string };
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+
+      // TODO: replace with proper response UI
+      alert(JSON.stringify(data, null, 2));
+    } catch {
+      setError("Could not reach the server. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -280,30 +307,48 @@ export default function StartPage() {
           style={{ display: "flex", justifyContent: "center" }}
         >
           <motion.div
-            whileHover={thought.trim() ? { scale: 1.02 } : {}}
-            whileTap={thought.trim() ? { scale: 0.98 } : {}}
+            whileHover={thought.trim() && !loading ? { scale: 1.02 } : {}}
+            whileTap={thought.trim() && !loading ? { scale: 0.98 } : {}}
             transition={{ type: "spring", stiffness: 350, damping: 20 }}
           >
             <Button
               variant="contained"
               size="large"
-              disabled={!thought.trim()}
+              disabled={!thought.trim() || loading}
               onClick={handleExplore}
+              startIcon={
+                loading ? <CircularProgress size={18} color="inherit" /> : null
+              }
               sx={{
                 px: 5,
                 py: 1.6,
                 fontSize: "1rem",
                 borderRadius: "999px",
                 minWidth: 230,
-                boxShadow: thought.trim()
-                  ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.3)}`
-                  : "none",
+                boxShadow:
+                  thought.trim() && !loading
+                    ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.3)}`
+                    : "none",
                 transition: "box-shadow 0.35s ease, opacity 0.35s ease",
               }}
             >
-              Explore this thought
+              {loading ? "Exploring…" : "Explore this thought"}
             </Button>
           </motion.div>
+
+          {/* Inline error */}
+          {error && (
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 2,
+                textAlign: "center",
+                color: theme.palette.error.main,
+              }}
+            >
+              {error}
+            </Typography>
+          )}
         </motion.div>
 
         {/* Reassurance footer */}
