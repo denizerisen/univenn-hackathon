@@ -121,36 +121,9 @@ export default function Home() {
         <Typography variant="h2">A ROAD NOT TAKEN</Typography>
 
         <Typography variant="body1" color="text.secondary" maxWidth={480}>
-          Built with Next.js, Material-UI, and Framer Motion — an organic earthy
-          journey from forest to sand.
+          Built with Next.js, Material-UI, and Framer Motion <br /> A visually
+          stunning app that reflects and expands a user’s thoughts.
         </Typography>
-
-        {/* Accent chips */}
-        <Stack
-          direction="row"
-          spacing={1}
-          flexWrap="wrap"
-          justifyContent="center"
-        >
-          {[
-            { label: "Forest Green", color: isLight ? "#2C6E49" : undefined },
-            { label: "Minty Sage", color: isLight ? "#4C956C" : undefined },
-            { label: "Terracotta", color: isLight ? "#C97B5A" : undefined },
-            { label: "Misty Blue", color: isLight ? "#8BB3C8" : undefined },
-            { label: "Copper", color: isLight ? "#D68C45" : undefined },
-          ].map(({ label, color }) => (
-            <motion.div
-              key={label}
-              whileHover={{ scale: 1.08 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <Chip
-                label={label}
-                sx={color ? { backgroundColor: color, color: "#FEFEE3" } : {}}
-              />
-            </motion.div>
-          ))}
-        </Stack>
 
         <Stack direction="row" spacing={2}>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
@@ -164,11 +137,11 @@ export default function Home() {
               Get Started
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+          {/* <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
             <Button variant="outlined" size="large" color="secondary">
               Learn More
             </Button>
-          </motion.div>
+          </motion.div> */}
         </Stack>
       </Box>
     </Container>
