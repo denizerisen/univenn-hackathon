@@ -45,9 +45,9 @@ const PROMPTS_TR_IZLEYICI = [
 ];
 
 const PROMPTS_TR_GENERAL = [
-  "Ya başaramazsam?",
-  "Aklımı durduramıyorum",
-  "Olanları tekrar tekrar düşünüyorum",
+  "Türkiye gruptan çıkabilir mi?",
+  "Bu kadar heyecanlanmak normal mi?",
+  "Hayal kırıklığına uğramaktan korkuyorum",
 ];
 
 const BLOBS = [
@@ -89,19 +89,56 @@ type Phase = "input" | "response";
 
 // High-intensity words that trigger breathing on their own
 const HIGH_TENSION_WORDS = [
-  "panic", "panicking", "breakdown", "suicid", "self-harm",
-  "hopeless", "worthless", "can't breathe", "falling apart",
-  "overwhelmed", "devastated", "can't cope", "can't go on",
-  "hate myself", "hate my life", "want to disappear",
+  "panic",
+  "panicking",
+  "breakdown",
+  "suicid",
+  "self-harm",
+  "hopeless",
+  "worthless",
+  "can't breathe",
+  "falling apart",
+  "overwhelmed",
+  "devastated",
+  "can't cope",
+  "can't go on",
+  "hate myself",
+  "hate my life",
+  "want to disappear",
 ];
 
 // Moderate words — need 2+ to trigger
 const MODERATE_TENSION_WORDS = [
-  "terrible", "horrible", "awful", "scared", "fear", "anxiety", "anxious",
-  "depressed", "destroy", "ruined", "disaster", "failure", "fail",
-  "alone", "stuck", "trapped", "broken", "shame", "ashamed", "humiliated",
-  "embarrassed", "useless", "stupid", "burden", "crying", "cannot",
-  "everything wrong", "nothing works", "no one cares", "nobody",
+  "terrible",
+  "horrible",
+  "awful",
+  "scared",
+  "fear",
+  "anxiety",
+  "anxious",
+  "depressed",
+  "destroy",
+  "ruined",
+  "disaster",
+  "failure",
+  "fail",
+  "alone",
+  "stuck",
+  "trapped",
+  "broken",
+  "shame",
+  "ashamed",
+  "humiliated",
+  "embarrassed",
+  "useless",
+  "stupid",
+  "burden",
+  "crying",
+  "cannot",
+  "everything wrong",
+  "nothing works",
+  "no one cares",
+  "nobody",
 ];
 
 function isTense(text: string): boolean {
@@ -120,18 +157,20 @@ const CALMING_MESSAGES = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StartPage() {
-  const [thought, setThought]   = useState("");
+  const [thought, setThought] = useState("");
   const [thoughts, setThoughts] = useState<string[]>([]);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState<string | null>(null);
-  const [phase, setPhase]       = useState<Phase>("input");
-  const [responseData, setResponseData] = useState<ThoughtResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("input");
+  const [responseData, setResponseData] = useState<ThoughtResponse | null>(
+    null,
+  );
 
   // TR mode role selection
   const [trRole, setTrRole] = useState<"sporcu" | "izleyici" | null>(null);
 
   // Guided breathing state
-  const [breathingMessage, setBreathingMessage]   = useState<string | null>(null);
+  const [breathingMessage, setBreathingMessage] = useState<string | null>(null);
   const [continueRequested, setContinueRequested] = useState(false);
 
   const theme = useTheme();
@@ -142,7 +181,7 @@ export default function StartPage() {
   const content = isTrMode
     ? trRole === "sporcu"
       ? {
-          overline: "TÜRK MİLLİ TAKIMI",
+          overline: "DÜNYA KUPASI - TÜRK MİLLİ TAKIMI",
           headline: "Sahada ne hissediyorsun?",
           subheadline: (
             <>
@@ -158,38 +197,38 @@ export default function StartPage() {
           ctaLoading: "Keşfediliyor…",
         }
       : trRole === "izleyici"
-      ? {
-          overline: "TÜRK MİLLİ TAKIMI",
-          headline: "Maç seni nasıl etkiledi?",
-          subheadline: (
-            <>
-              Takımın için hissettiğin her şey gerçek.
-              <br />
-              Bugün içinden geçenleri bir anlat.
-            </>
-          ),
-          placeholder: "Maçı izlerken içimden...",
-          chipHint: "ya da bir tanesini seç",
-          prompts: PROMPTS_TR_IZLEYICI,
-          ctaIdle: "Düşünceni keşfet",
-          ctaLoading: "Keşfediliyor…",
-        }
-      : {
-          overline: "TÜRK MİLLİ TAKIMI",
-          headline: "Aklında ne var?",
-          subheadline: (
-            <>
-              Şu an her şeyi çözmek zorunda değilsin.
-              <br />
-              Aklına ilk gelen ne ise onunla başla.
-            </>
-          ),
-          placeholder: "Sürekli aklımda...",
-          chipHint: "ya da bir tanesini seç",
-          prompts: PROMPTS_TR_GENERAL,
-          ctaIdle: "Düşünceni keşfet",
-          ctaLoading: "Keşfediliyor…",
-        }
+        ? {
+            overline: "DÜNYA KUPASI - TÜRK MİLLİ TAKIMI",
+            headline: "Maç seni nasıl etkiledi?",
+            subheadline: (
+              <>
+                Takımın için hissettiğin her şey gerçek.
+                <br />
+                Bugün içinden geçenleri bir anlat.
+              </>
+            ),
+            placeholder: "Maçı izlerken içimden...",
+            chipHint: "ya da bir tanesini seç",
+            prompts: PROMPTS_TR_IZLEYICI,
+            ctaIdle: "Düşünceni keşfet",
+            ctaLoading: "Keşfediliyor…",
+          }
+        : {
+            overline: "DÜNYA KUPASI - TÜRK MİLLİ TAKIMI",
+            headline: "2026 FIFA Dünya Kupası için heyecanlı mısın?",
+            subheadline: (
+              <>
+                Milyonlar aynı anda nefesini tuttu.
+                <br />
+                Senin hissettiğin de bu hikâyenin bir parçası.
+              </>
+            ),
+            placeholder: "Bu turnuva bende...",
+            chipHint: "ya da bir tanesini seç",
+            prompts: PROMPTS_TR_GENERAL,
+            ctaIdle: "Düşünceni keşfet",
+            ctaLoading: "Keşfediliyor…",
+          }
     : {
         overline: "A ROAD NOT TAKEN",
         headline: "What's been on your mind?",
@@ -221,7 +260,10 @@ export default function StartPage() {
       const res = await fetch("/api/thought", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thought: submittedThought, ...(trRole && { role: trRole }) }),
+        body: JSON.stringify({
+          thought: submittedThought,
+          ...(trRole && { role: trRole }),
+        }),
       });
 
       const data = (await res.json()) as ThoughtResponse & { error?: string };
@@ -318,9 +360,20 @@ export default function StartPage() {
       ))}
 
       {/* Mode toggles — persistent */}
-      <Box sx={{ position: "fixed", top: 20, right: 24, zIndex: 10, display: "flex", gap: 0.5 }}>
+      <Box
+        sx={{
+          position: "fixed",
+          top: 20,
+          right: 24,
+          zIndex: 10,
+          display: "flex",
+          gap: 0.5,
+        }}
+      >
         {/* TR theme toggle */}
-        <Tooltip title={isTrMode ? "TR temasını kapat" : "Türkiye Milli Takımı teması"}>
+        <Tooltip
+          title={isTrMode ? "TR temasını kapat" : "Türkiye Milli Takımı teması"}
+        >
           <IconButton
             onClick={toggleTrMode}
             size="small"
@@ -329,7 +382,9 @@ export default function StartPage() {
               width: 38,
               height: 38,
               border: isTrMode ? "2px solid #ef233c" : "2px solid transparent",
-              backgroundColor: isTrMode ? "rgba(239,35,60,0.12)" : "transparent",
+              backgroundColor: isTrMode
+                ? "rgba(239,35,60,0.12)"
+                : "transparent",
               boxShadow: isTrMode ? "0 0 0 3px rgba(239,35,60,0.18)" : "none",
               opacity: isTrMode ? 1 : 0.35,
               transition: "all 0.25s ease",
@@ -377,7 +432,11 @@ export default function StartPage() {
               transition={{ duration: 0.3 }}
               style={{ display: "flex" }}
             >
-              {isLight ? <DarkModeRoundedIcon fontSize="small" /> : <LightModeRoundedIcon fontSize="small" />}
+              {isLight ? (
+                <DarkModeRoundedIcon fontSize="small" />
+              ) : (
+                <LightModeRoundedIcon fontSize="small" />
+              )}
             </motion.div>
           </IconButton>
         </Tooltip>
@@ -476,7 +535,11 @@ export default function StartPage() {
                           whileTap={{ scale: 0.96 }}
                         >
                           <Chip
-                            label={role === "sporcu" ? "⚽ Sporcuyum" : "🏟️ İzleyiciyim"}
+                            label={
+                              role === "sporcu"
+                                ? "⚽ Sporcuyum"
+                                : "🏟️ İzleyiciyim"
+                            }
                             onClick={() => setTrRole(isActive ? null : role)}
                             variant="outlined"
                             sx={{

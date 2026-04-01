@@ -29,12 +29,14 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
   }, []);
 
   const toggleTrMode = React.useCallback(() => {
-    setMode((prev) =>
-      prev === "light"    ? "tr-light" :
-      prev === "dark"     ? "tr-dark"  :
-      prev === "tr-light" ? "light"    :
-                            "dark"
-    );
+    setMode((prev) => {
+      if (prev === "tr-light" || prev === "tr-dark") {
+        // TR kapatılıyor — önceki light/dark'a geri dön
+        return prev === "tr-light" ? "light" : "dark";
+      }
+      // TR açılıyor — her zaman tr-light ile başla
+      return "tr-light";
+    });
   }, []);
 
   const isTrMode = mode === "tr-light" || mode === "tr-dark";
