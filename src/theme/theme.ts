@@ -1,4 +1,5 @@
-import { createTheme, type PaletteMode } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
+import type { ThemeMode } from "@/context/ColorModeContext";
 
 // ─── Light palette — 8-stop earthy scale ─────────────────────────────────────
 //
@@ -32,6 +33,53 @@ const light = {
   divider: "#D68C4555",
 };
 
+// ─── TR-light palette — Türkiye Milli Takımı ─────────────────────────────────
+//
+//  #fffbfb  snow            → pure near-white background
+//  #e30613  racing-red      → dominant primary, headings, buttons
+//  #ca0101  brick-ember     → deep red for hover / active / borders
+//  #393939  graphite        → body text — strong contrast on white
+//  #e0dcdc  alabaster-grey  → muted labels, secondary, chip fills
+//
+const trLight = {
+  primary:         "#e30613",          // racing-red
+  primaryContrast: "#fffbfb",          // snow on red
+  secondary:       "#e0dcdc",          // alabaster-grey
+  bgDefault:       "#fffbfb",          // snow
+  bgPaper:         "#fffffff2",
+  textPrimary:     "#393939",          // graphite
+  textSecondary:   "#6b6b6b",          // mid-graphite
+  heading:         "#e30613",          // racing-red headings — dominant
+  bodyGradient:    "linear-gradient(160deg, #fffbfb 0%, #f5f0f0 100%)",
+  paperBg:         "#fffffff2",
+  elevatedBg:      "#f5f0f0",
+  inputBg:         "#fff6f6",          // barely-there red tint
+  inputHoverBorder:"#e30613",
+  chipBg:          "#fce8e8",          // pale red chip
+  divider:         "#e3061322",
+};
+
+// ─── TR-dark palette ──────────────────────────────────────────────────────────
+//
+//  Graphite base, racing-red accents dominant, snow for text
+//
+const trDark = {
+  primary:         "#e30613",          // racing-red — still dominant
+  secondary:       "#e0dcdc",          // alabaster-grey
+  bgDefault:       "#393939",          // graphite
+  bgPaper:         "#2c2c2ccc",        // slightly deeper cards
+  textPrimary:     "#fffbfb",          // snow
+  textSecondary:   "#e0dcdc",          // alabaster-grey
+  heading:         "#e30613",          // racing-red headings in dark too
+  bodyGradient:    "linear-gradient(160deg, #393939 0%, #242424 100%)",
+  paperBg:         "#2c2c2ccc",
+  elevatedBg:      "#4a4a4a",
+  inputBg:         "#2c2c2caa",
+  inputHoverBorder:"#e30613",
+  chipBg:          "#ca0101",          // brick-ember chip
+  divider:         "#e3061344",
+};
+
 // ─── Dark palette ─────────────────────────────────────────────────────────────
 //
 //  #10002b  dark-amethyst    → gradient end / deepest bg
@@ -60,21 +108,27 @@ const dark = {
   divider: "#5a189a",
 };
 
-export function getTheme(mode: PaletteMode) {
-  const c = mode === "light" ? light : dark;
-  const isDark = mode === "dark";
+export function getTheme(mode: ThemeMode) {
+  const paletteMode = mode === "dark" || mode === "tr-dark" ? "dark" : "light";
+  const c =
+    mode === "light"    ? light    :
+    mode === "dark"     ? dark     :
+    mode === "tr-light" ? trLight  :
+                          trDark;
+  const isDark = paletteMode === "dark";
+  const isTr   = mode === "tr-light" || mode === "tr-dark";
 
   return createTheme({
     palette: {
-      mode,
+      mode: paletteMode,
       primary: {
         main: c.primary,
-        ...(!isDark && { contrastText: light.primaryContrast }),
+        contrastText: "primaryContrast" in c ? (c as typeof light).primaryContrast : undefined,
       },
       secondary: { main: c.secondary },
-      warning:   { main: isDark ? "#c77dff" : "#D68C45" },  // copper / mauve-magic
-      info:      { main: isDark ? "#9d4edd" : "#8BB3C8" },  // lavender / misty blue
-      success:   { main: isDark ? "#4C956C" : "#4C956C" },  // mauve / minty sage
+      warning: { main: isTr ? "#780000" : isDark ? "#c77dff" : "#D68C45" },
+      info:    { main: isTr ? "#669bbc" : isDark ? "#9d4edd" : "#8BB3C8" },
+      success: { main: isTr ? "#669bbc" : "#4C956C" },
       background: {
         default: c.bgDefault,
         paper: c.bgPaper,
@@ -110,6 +164,8 @@ export function getTheme(mode: PaletteMode) {
             backgroundColor: c.paperBg,
             boxShadow: isDark
               ? "0 8px 30px rgba(0,0,0,0.35)"
+              : isTr
+              ? "0 8px 30px rgba(227,6,19,0.10)"
               : "0 8px 30px rgba(44,110,73,0.08)",
           },
         },
@@ -123,6 +179,8 @@ export function getTheme(mode: PaletteMode) {
             fontWeight: 600,
             boxShadow: isDark
               ? "0 4px 14px rgba(0,0,0,0.4)"
+              : isTr
+              ? "0 4px 14px rgba(227,6,19,0.32)"
               : "0 4px 14px rgba(214,140,69,0.25)",
           },
         },

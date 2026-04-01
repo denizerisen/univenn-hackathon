@@ -13,6 +13,7 @@ import { alpha } from "@mui/material/styles";
 import { AnimatePresence, motion } from "motion/react";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import { useAccent } from "@/hooks/useAccent";
 
 interface Props {
   thought: string;
@@ -30,10 +31,7 @@ export default function ThoughtCard({ thoughts }: Props) {
   }, [thoughts.length]);
 
   const theme = useTheme();
-  const accent =
-    theme.palette.mode === "dark"
-      ? theme.palette.secondary.main
-      : theme.palette.success.main;
+  const accent = useAccent();
 
   const canPrev = index > 0;
   const canNext = index < thoughts.length - 1;

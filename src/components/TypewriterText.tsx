@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { TypographyProps } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { motion } from "motion/react";
+import { useAccent } from "@/hooks/useAccent";
 
 interface ScatterData {
   dx: number;
@@ -41,7 +42,7 @@ export default function TypewriterText({
   sx,
   ...typographyProps
 }: Props) {
-  const theme = useTheme();
+  const accent = useAccent();
   const [phase, setPhase]             = useState<Phase>("type");
   const [displayed, setDisplayed]     = useState("");
   const [done, setDone]               = useState(false);
@@ -51,11 +52,6 @@ export default function TypewriterText({
   const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayedRef = useRef("");
   const containerRef = useRef<HTMLSpanElement>(null);
-
-  const accent =
-    theme.palette.mode === "dark"
-      ? theme.palette.secondary.main
-      : theme.palette.success.main;
 
   const clearTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);

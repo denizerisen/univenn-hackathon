@@ -11,7 +11,7 @@ const quicksand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "Univenn Hackathon",
+  title: "A ROAD NOT TAKEN",
   description: "Built with Next.js, Material-UI, and Framer Motion",
 };
 

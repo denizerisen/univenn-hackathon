@@ -18,22 +18,86 @@ import { useColorMode } from "@/context/ColorModeContext";
 import { useTheme } from "@mui/material/styles";
 
 export default function Home() {
-  const { mode, toggleMode } = useColorMode();
+  const { mode, toggleMode, toggleTrMode, isTrMode, isDark } = useColorMode();
   const theme = useTheme();
-  const isLight = mode === "light";
+  const isLight = !isDark;
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ position: "fixed", top: 20, right: 24 }}>
+      <Box
+        sx={{
+          position: "fixed",
+          top: 20,
+          right: 24,
+          display: "flex",
+          gap: 0.5,
+        }}
+      >
+        <Tooltip
+          title={isTrMode ? "TR temasını kapat" : "Türkiye Milli Takımı teması"}
+        >
+          <IconButton
+            onClick={toggleTrMode}
+            size="small"
+            sx={{
+              fontSize: "1.2rem",
+              width: 38,
+              height: 38,
+              border: isTrMode ? "2px solid #ef233c" : "2px solid transparent",
+              backgroundColor: isTrMode
+                ? "rgba(239,35,60,0.12)"
+                : "transparent",
+              boxShadow: isTrMode ? "0 0 0 3px rgba(239,35,60,0.18)" : "none",
+              opacity: isTrMode ? 1 : 0.35,
+              transition: "all 0.25s ease",
+              "&:hover": {
+                opacity: 1,
+                backgroundColor: "rgba(239,35,60,0.1)",
+                border: "2px solid #ef233c",
+              },
+            }}
+          >
+            <motion.div
+              animate={{ scale: isTrMode ? 1.1 : 0.9 }}
+              transition={{ duration: 0.25 }}
+              style={{ lineHeight: 1, display: "flex" }}
+            >
+              🇹🇷
+            </motion.div>
+          </IconButton>
+        </Tooltip>
+
         <Tooltip title={isLight ? "Switch to dark" : "Switch to light"}>
-          <IconButton onClick={toggleMode} color="primary" size="large">
+          <IconButton
+            onClick={toggleMode}
+            size="small"
+            sx={{
+              width: 38,
+              height: 38,
+              border: "2px solid transparent",
+              backgroundColor: "transparent",
+              color: theme.palette.text.secondary,
+              opacity: 0.6,
+              transition: "all 0.25s ease",
+              "&:hover": {
+                opacity: 1,
+                backgroundColor: "rgba(128,128,128,0.1)",
+                border: `2px solid ${theme.palette.text.secondary}`,
+              },
+            }}
+          >
             <motion.div
               key={mode}
               initial={{ rotate: -30, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               transition={{ duration: 0.3 }}
+              style={{ display: "flex" }}
             >
-              {isLight ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+              {isLight ? (
+                <DarkModeRoundedIcon fontSize="small" />
+              ) : (
+                <LightModeRoundedIcon fontSize="small" />
+              )}
             </motion.div>
           </IconButton>
         </Tooltip>
@@ -54,7 +118,7 @@ export default function Home() {
           gap: 4,
         }}
       >
-        <Typography variant="h2">Univenn Hackathon</Typography>
+        <Typography variant="h2">A ROAD NOT TAKEN</Typography>
 
         <Typography variant="body1" color="text.secondary" maxWidth={480}>
           Built with Next.js, Material-UI, and Framer Motion — an organic earthy

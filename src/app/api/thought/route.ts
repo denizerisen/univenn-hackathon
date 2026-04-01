@@ -22,11 +22,25 @@ export interface ThoughtResponse {
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are a calm, supportive mental wellness assistant.
+function buildSystemPrompt(role?: string): string {
+  const roleContext =
+    role === "sporcu"
+      ? `\n\nThe user has identified themselves as an ATHLETE (sporcu). 
+Tailor your response to the unique pressures athletes face: performance anxiety, fear of injury, 
+team expectations, competition stress, body image, and the identity tied to athletic success.
+Use sports-relevant framing when appropriate (e.g., mental resilience, recovery, staying grounded).`
+      : role === "izleyici"
+      ? `\n\nThe user has identified themselves as a FAN/SPECTATOR (izleyici) of a sports team — likely the Turkish national football team.
+Tailor your response to the emotional experience of passionate supporters: anxiety about match outcomes, 
+collective disappointment, over-identification with team results, and the social highs and lows of fandom.
+Use fan-relevant framing when appropriate (e.g., shared experience, perspective on outcome, separating self-worth from team results).`
+      : "";
+
+  return `You are a calm, supportive mental wellness assistant.
 You help users reframe negative thoughts gently.
 You never invalidate feelings.
 You avoid harsh or clinical language.
-You encourage balanced and realistic thinking.
+You encourage balanced and realistic thinking.${roleContext}
 
 You must respond ONLY with a valid JSON object — no markdown, no explanation, no code fences.
 The JSON must follow this exact structure:
@@ -37,32 +51,31 @@ The JSON must follow this exact structure:
     "summary": "A short, gentle explanation of what you noticed in the thought"
   },
   "paths": [
-  {
+    {
       "type": "positive",
       "title": "A Kinder Perspective",
       "description": "A gentle, hopeful reframe of the situation",
       "feeling": "How this perspective might feel emotionally"
     },
-    
     {
       "type": "most_likely",
       "title": "Most Likely",
       "description": "A grounded, realistic description of what will probably happen",
       "feeling": "How this scenario might feel emotionally"
     },
-    
-      {
+    {
       "type": "worst_case",
       "title": "Worst Case",
       "description": "A compassionate description of the worst case scenario",
       "feeling": "How this scenario might feel emotionally"
-    },
+    }
   ]
 }
 
 Common thought patterns to detect (use plain language, not clinical labels):
 - catastrophizing, black-and-white thinking, mind reading, fortune telling,
   personalizing, emotional reasoning, should statements, overgeneralizing, filtering`;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -105,8 +118,9 @@ const client = new Anthropic({
 export async function POST(req: NextRequest) {
   // 1. Parse & validate body
   let thought: string;
+  let role: string | undefined;
   try {
-    const body = await req.json() as { thought?: unknown };
+    const body = await req.json() as { thought?: unknown; role?: unknown };
     if (typeof body.thought !== "string" || !body.thought.trim()) {
       return NextResponse.json(
         { error: "Request body must include a non-empty `thought` string." },
@@ -114,6 +128,9 @@ export async function POST(req: NextRequest) {
       );
     }
     thought = body.thought.trim();
+    if (body.role === "sporcu" || body.role === "izleyici") {
+      role = body.role;
+    }
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON body." },
@@ -127,7 +144,7 @@ export async function POST(req: NextRequest) {
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(role),
       messages: [
         {
           role: "user",

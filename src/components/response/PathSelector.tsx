@@ -7,6 +7,7 @@ import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import type { ThoughtPath } from "@/app/api/thought/route";
+import { useAccent } from "@/hooks/useAccent";
 
 interface Props {
   paths: ThoughtPath[];
@@ -28,9 +29,7 @@ const TYPE_ORDER: ThoughtPath["type"][] = ["positive", "most_likely", "worst_cas
 
 export default function PathSelector({ paths, selected, onSelect }: Props) {
   const theme = useTheme();
-  const accent = theme.palette.mode === "dark"
-    ? theme.palette.secondary.main   // mauve-magic #c77dff
-    : theme.palette.success.main;    // minty sage  #4C956C
+  const accent = useAccent();
 
   const sorted = TYPE_ORDER
     .map((t) => paths.find((p) => p.type === t))

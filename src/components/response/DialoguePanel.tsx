@@ -17,6 +17,7 @@ import { AnimatePresence, motion } from "motion/react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { useAccent } from "@/hooks/useAccent";
 
 function ThinkingDots({ accent }: { accent: string }) {
   return (
@@ -84,10 +85,7 @@ export default function DialoguePanel({
   useEffect(() => { setSeenPaths(new Set()); }, [data]);
 
   const theme = useTheme();
-  const accent =
-    theme.palette.mode === "dark"
-      ? theme.palette.secondary.main
-      : theme.palette.success.main;
+  const accent = useAccent();
 
   const activePath =
     data.paths.find((p) => p.type === selected) ?? data.paths[0];

@@ -5,6 +5,7 @@ import { alpha } from "@mui/material/styles";
 import { motion } from "motion/react";
 import type { ThoughtAnalysis } from "@/app/api/thought/route";
 import TypewriterText from "@/components/TypewriterText";
+import { useAccent } from "@/hooks/useAccent";
 
 interface Props {
   analysis: ThoughtAnalysis;
@@ -14,10 +15,7 @@ interface Props {
 
 export default function ReflectionHeader({ analysis, isLoading, onSummaryDone }: Props) {
   const theme = useTheme();
-  const accent =
-    theme.palette.mode === "dark"
-      ? theme.palette.secondary.main
-      : theme.palette.success.main;
+  const accent = useAccent();
 
   return (
     <motion.div

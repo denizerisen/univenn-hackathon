@@ -26,11 +26,28 @@ import type { ThoughtResponse } from "@/app/api/thought/route";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const PROMPTS = [
+const PROMPTS_DEFAULT = [
   "What if I fail?",
   "I can't stop overthinking this",
-
   "I keep replaying what happened",
+];
+
+const PROMPTS_TR_SPORCU = [
+  "Performansım yeterli mi?",
+  "Takımı hayal kırıklığına uğratacağım",
+  "Baskıyı kaldıramıyorum",
+];
+
+const PROMPTS_TR_IZLEYICI = [
+  "Takımımız yine hayal kırıklığı yarattı",
+  "Bu kadar üzülmemeli miyim?",
+  "Umut beslemekten korkuyorum",
+];
+
+const PROMPTS_TR_GENERAL = [
+  "Ya başaramazsam?",
+  "Aklımı durduramıyorum",
+  "Olanları tekrar tekrar düşünüyorum",
 ];
 
 const BLOBS = [
@@ -110,13 +127,85 @@ export default function StartPage() {
   const [phase, setPhase]       = useState<Phase>("input");
   const [responseData, setResponseData] = useState<ThoughtResponse | null>(null);
 
+  // TR mode role selection
+  const [trRole, setTrRole] = useState<"sporcu" | "izleyici" | null>(null);
+
   // Guided breathing state
   const [breathingMessage, setBreathingMessage]   = useState<string | null>(null);
   const [continueRequested, setContinueRequested] = useState(false);
 
   const theme = useTheme();
-  const { mode, toggleMode } = useColorMode();
-  const isLight = mode === "light";
+  const { mode, toggleMode, toggleTrMode, isTrMode, isDark } = useColorMode();
+  const isLight = !isDark;
+
+  // ── Localised content ────────────────────────────────────────────────────────
+  const content = isTrMode
+    ? trRole === "sporcu"
+      ? {
+          overline: "TÜRK MİLLİ TAKIMI",
+          headline: "Sahada ne hissediyorsun?",
+          subheadline: (
+            <>
+              Her maç bir ders, her his geçerli.
+              <br />
+              Sahada yaşadıklarını burada paylaşabilirsin.
+            </>
+          ),
+          placeholder: "Bugün antrenman/maçta kendimi...",
+          chipHint: "ya da bir tanesini seç",
+          prompts: PROMPTS_TR_SPORCU,
+          ctaIdle: "Düşünceni keşfet",
+          ctaLoading: "Keşfediliyor…",
+        }
+      : trRole === "izleyici"
+      ? {
+          overline: "TÜRK MİLLİ TAKIMI",
+          headline: "Maç seni nasıl etkiledi?",
+          subheadline: (
+            <>
+              Takımın için hissettiğin her şey gerçek.
+              <br />
+              Bugün içinden geçenleri bir anlat.
+            </>
+          ),
+          placeholder: "Maçı izlerken içimden...",
+          chipHint: "ya da bir tanesini seç",
+          prompts: PROMPTS_TR_IZLEYICI,
+          ctaIdle: "Düşünceni keşfet",
+          ctaLoading: "Keşfediliyor…",
+        }
+      : {
+          overline: "TÜRK MİLLİ TAKIMI",
+          headline: "Aklında ne var?",
+          subheadline: (
+            <>
+              Şu an her şeyi çözmek zorunda değilsin.
+              <br />
+              Aklına ilk gelen ne ise onunla başla.
+            </>
+          ),
+          placeholder: "Sürekli aklımda...",
+          chipHint: "ya da bir tanesini seç",
+          prompts: PROMPTS_TR_GENERAL,
+          ctaIdle: "Düşünceni keşfet",
+          ctaLoading: "Keşfediliyor…",
+        }
+    : {
+        overline: "A ROAD NOT TAKEN",
+        headline: "What's been on your mind?",
+        subheadline: (
+          <>
+            You don't have to figure everything out right now.
+            <br />
+            Just start with whatever feels closest to the surface.
+          </>
+        ),
+        placeholder: "I keep thinking...",
+        chipHint: "or pick something that resonates",
+        prompts: PROMPTS_DEFAULT,
+        ctaIdle: "Explore this thought",
+        ctaLoading: "Exploring…",
+      };
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -132,7 +221,7 @@ export default function StartPage() {
       const res = await fetch("/api/thought", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thought: submittedThought }),
+        body: JSON.stringify({ thought: submittedThought, ...(trRole && { role: trRole }) }),
       });
 
       const data = (await res.json()) as ThoughtResponse & { error?: string };
@@ -228,16 +317,57 @@ export default function StartPage() {
         />
       ))}
 
-      {/* Mode toggle — persistent */}
-      <Box sx={{ position: "fixed", top: 20, right: 24, zIndex: 10 }}>
+      {/* Mode toggles — persistent */}
+      <Box sx={{ position: "fixed", top: 20, right: 24, zIndex: 10, display: "flex", gap: 0.5 }}>
+        {/* TR theme toggle */}
+        <Tooltip title={isTrMode ? "TR temasını kapat" : "Türkiye Milli Takımı teması"}>
+          <IconButton
+            onClick={toggleTrMode}
+            size="small"
+            sx={{
+              fontSize: "1.2rem",
+              width: 38,
+              height: 38,
+              border: isTrMode ? "2px solid #ef233c" : "2px solid transparent",
+              backgroundColor: isTrMode ? "rgba(239,35,60,0.12)" : "transparent",
+              boxShadow: isTrMode ? "0 0 0 3px rgba(239,35,60,0.18)" : "none",
+              opacity: isTrMode ? 1 : 0.35,
+              transition: "all 0.25s ease",
+              "&:hover": {
+                opacity: 1,
+                backgroundColor: "rgba(239,35,60,0.1)",
+                border: "2px solid #ef233c",
+              },
+            }}
+          >
+            <motion.div
+              animate={{ scale: isTrMode ? 1.1 : 0.9 }}
+              transition={{ duration: 0.25 }}
+              style={{ lineHeight: 1, display: "flex" }}
+            >
+              🇹🇷
+            </motion.div>
+          </IconButton>
+        </Tooltip>
+
+        {/* Dark / light toggle */}
         <Tooltip title={isLight ? "Switch to dark" : "Switch to light"}>
           <IconButton
             onClick={toggleMode}
-            size="large"
+            size="small"
             sx={{
+              width: 38,
+              height: 38,
+              border: "2px solid transparent",
+              backgroundColor: "transparent",
               color: theme.palette.text.secondary,
               opacity: 0.6,
-              "&:hover": { opacity: 1 },
+              transition: "all 0.25s ease",
+              "&:hover": {
+                opacity: 1,
+                backgroundColor: "rgba(128,128,128,0.1)",
+                border: `2px solid ${theme.palette.text.secondary}`,
+              },
             }}
           >
             <motion.div
@@ -245,8 +375,9 @@ export default function StartPage() {
               initial={{ rotate: -30, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               transition={{ duration: 0.3 }}
+              style={{ display: "flex" }}
             >
-              {isLight ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+              {isLight ? <DarkModeRoundedIcon fontSize="small" /> : <LightModeRoundedIcon fontSize="small" />}
             </motion.div>
           </IconButton>
         </Tooltip>
@@ -298,14 +429,14 @@ export default function StartPage() {
                     fontWeight: 600,
                   }}
                 >
-                  A ROAD NOT TAKEN
+                  {content.overline}
                 </Typography>
               </motion.div>
 
               {/* Headline */}
               <motion.div {...fadeUp(0.3)} variants={windExitVariant}>
                 <Typography variant="h3" sx={{ textAlign: "center", mb: 1.5 }}>
-                  What's been on your mind?
+                  {content.headline}
                 </Typography>
               </motion.div>
 
@@ -321,11 +452,68 @@ export default function StartPage() {
                     fontSize: "1.1rem",
                   }}
                 >
-                  You don't have to figure everything out right now.
-                  <br />
-                  Just start with whatever feels closest to the surface.
+                  {content.subheadline}
                 </Typography>
               </motion.div>
+
+              {/* TR role selector — only in TR mode */}
+              {isTrMode && (
+                <motion.div {...fadeUp(0.5)} variants={windExitVariant}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 1.5,
+                      mb: 4,
+                    }}
+                  >
+                    {(["sporcu", "izleyici"] as const).map((role) => {
+                      const isActive = trRole === role;
+                      return (
+                        <motion.div
+                          key={role}
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                        >
+                          <Chip
+                            label={role === "sporcu" ? "⚽ Sporcuyum" : "🏟️ İzleyiciyim"}
+                            onClick={() => setTrRole(isActive ? null : role)}
+                            variant="outlined"
+                            sx={{
+                              cursor: "pointer",
+                              borderRadius: "999px",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                              px: 1.5,
+                              py: 2.5,
+                              transition: "all 0.2s ease",
+                              borderWidth: 2,
+                              borderColor: isActive
+                                ? theme.palette.primary.main
+                                : alpha(theme.palette.primary.main, 0.3),
+                              color: isActive
+                                ? theme.palette.primary.contrastText
+                                : theme.palette.primary.main,
+                              backgroundColor: isActive
+                                ? theme.palette.primary.main
+                                : "transparent",
+                              boxShadow: isActive
+                                ? `0 4px 16px ${alpha(theme.palette.primary.main, 0.35)}`
+                                : "none",
+                              "&&:hover": {
+                                borderColor: theme.palette.primary.main,
+                                backgroundColor: isActive
+                                  ? theme.palette.primary.main
+                                  : alpha(theme.palette.primary.main, 0.07),
+                              },
+                            }}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </Box>
+                </motion.div>
+              )}
 
               {/* TextField */}
               <motion.div {...fadeUp(0.55)} variants={windExitVariant}>
@@ -335,7 +523,7 @@ export default function StartPage() {
                   rows={1}
                   value={thought}
                   onChange={(e) => setThought(e.target.value)}
-                  placeholder="I keep thinking..."
+                  placeholder={content.placeholder}
                   variant="outlined"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -390,7 +578,7 @@ export default function StartPage() {
                     letterSpacing: "0.02em",
                   }}
                 >
-                  or pick something that resonates
+                  {content.chipHint}
                 </Typography>
 
                 <Box
@@ -402,7 +590,7 @@ export default function StartPage() {
                     mb: 5,
                   }}
                 >
-                  {PROMPTS.map((prompt) => {
+                  {content.prompts.map((prompt) => {
                     const isSelected = thought === prompt;
                     return (
                       <motion.div
@@ -490,7 +678,7 @@ export default function StartPage() {
                       transition: "box-shadow 0.35s ease, opacity 0.35s ease",
                     }}
                   >
-                    {loading ? "Exploring…" : "Explore this thought"}
+                    {loading ? content.ctaLoading : content.ctaIdle}
                   </Button>
                 </motion.div>
 
