@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ThoughtResponse } from "@/app/api/thought/route";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   Box,
   Button,
@@ -19,6 +18,8 @@ import { alpha } from "@mui/material/styles";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import { useColorMode } from "@/context/ColorModeContext";
+import ResponseScene from "@/components/response/ResponseScene";
+import type { ThoughtResponse } from "@/app/api/thought/route";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -37,23 +38,48 @@ const BLOBS = [
   { size: 200, left: "-4%", top: "68%", delay: 1.1, p: 0.06, s: 0.1 },
 ];
 
-// ─── Animation helper ─────────────────────────────────────────────────────────
+// ─── Animation variants ───────────────────────────────────────────────────────
 
+// Enter animation (reused on every child)
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.75, delay, ease: [0.22, 1, 0.36, 1] as const },
 });
 
+// Wind-blow exit — parent staggers, children declare their own exit shape
+const inputContainerVariants = {
+  exit: {
+    transition: { staggerChildren: 0.065, staggerDirection: 1 },
+  },
+};
+
+const windExitVariant = {
+  exit: {
+    x: -110,
+    opacity: 0,
+    transition: { duration: 0.38, ease: [0.4, 0, 1, 1] as const },
+  },
+};
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+type Phase = "input" | "response";
 
 export default function StartPage() {
   const [thought, setThought] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("input");
+  const [responseData, setResponseData] = useState<ThoughtResponse | null>(
+    null,
+  );
+
   const theme = useTheme();
   const { mode, toggleMode } = useColorMode();
   const isLight = mode === "light";
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleExplore = async () => {
     if (!thought.trim()) return;
@@ -74,8 +100,8 @@ export default function StartPage() {
         return;
       }
 
-      // TODO: replace with proper response UI
-      alert(JSON.stringify(data, null, 2));
+      setResponseData(data);
+      setPhase("response");
     } catch {
       setError("Could not reach the server. Please check your connection.");
     } finally {
@@ -83,9 +109,18 @@ export default function StartPage() {
     }
   };
 
+  const handleReset = () => {
+    setPhase("input");
+    setThought("");
+    setResponseData(null);
+    setError(null);
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <Box sx={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-      {/* Ambient blobs */}
+      {/* Ambient blobs — persistent across phases */}
       {BLOBS.map((b, i) => (
         <motion.div
           key={i}
@@ -109,7 +144,7 @@ export default function StartPage() {
         />
       ))}
 
-      {/* Mode toggle */}
+      {/* Mode toggle — persistent */}
       <Box sx={{ position: "fixed", top: 20, right: 24, zIndex: 10 }}>
         <Tooltip title={isLight ? "Switch to dark" : "Switch to light"}>
           <IconButton
@@ -133,241 +168,282 @@ export default function StartPage() {
         </Tooltip>
       </Box>
 
-      {/* Main content */}
-      <Container
-        maxWidth="md"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          py: 10,
-          px: { xs: 3, sm: 4 },
-        }}
-      >
-        {/* App name */}
-        <motion.div {...fadeUp(0.15)}>
-          <Typography
-            variant="overline"
-            sx={{
-              display: "block",
-              textAlign: "center",
-              letterSpacing: "0.28em",
-              color: theme.palette.warning.main,
-              mb: 6,
-              fontSize: "1.25rem",
-              fontWeight: 900,
-            }}
+      {/* ── Phase content ─────────────────────────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        {/* ── Input phase ─────────────────────────────────────────────────── */}
+        {phase === "input" && (
+          <motion.div
+            key="input-scene"
+            variants={inputContainerVariants}
+            exit="exit"
+            style={{ position: "relative", zIndex: 1 }}
           >
-            A ROAD NOT TAKEN
-          </Typography>
-        </motion.div>
+            <Container
+              maxWidth="sm"
+              sx={{
+                minHeight: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                py: 10,
+                px: { xs: 3, sm: 4 },
+              }}
+            >
+              {/* App name */}
+              <motion.div {...fadeUp(0.15)} variants={windExitVariant}>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    display: "block",
+                    textAlign: "center",
+                    letterSpacing: "0.28em",
+                    color: theme.palette.warning.main,
+                    mb: 7,
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  thought mirror
+                </Typography>
+              </motion.div>
 
-        {/* Headline */}
-        <motion.div {...fadeUp(0.3)}>
-          <Typography variant="h3" sx={{ textAlign: "center", mb: 1.5 }}>
-            What's been on your mind?
-          </Typography>
-        </motion.div>
+              {/* Headline */}
+              <motion.div {...fadeUp(0.3)} variants={windExitVariant}>
+                <Typography variant="h3" sx={{ textAlign: "center", mb: 1.5 }}>
+                  What's been on your mind?
+                </Typography>
+              </motion.div>
 
-        {/* Sub-headline */}
-        <motion.div {...fadeUp(0.42)}>
-          <Typography
-            variant="body1"
-            sx={{
-              textAlign: "center",
-              mb: 5,
-              px: 2,
-              color: theme.palette.text.primary,
-              fontSize: "1.1rem",
-            }}
-          >
-            You don't have to figure everything out right now.
-            <br />
-            Just start with whatever feels closest to the surface.
-          </Typography>
-        </motion.div>
+              {/* Sub-headline */}
+              <motion.div {...fadeUp(0.42)} variants={windExitVariant}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    textAlign: "center",
+                    mb: 5,
+                    px: 2,
+                    color: theme.palette.text.primary,
+                    fontSize: "1.1rem",
+                  }}
+                >
+                  You don't have to figure everything out right now.
+                  <br />
+                  Just start with whatever feels closest to the surface.
+                </Typography>
+              </motion.div>
 
-        {/* TextField */}
-        <motion.div {...fadeUp(0.55)}>
-          <TextField
-            fullWidth
-            multiline
-            rows={1}
-            value={thought}
-            onChange={(e) => setThought(e.target.value)}
-            placeholder="I keep thinking I messed everything up…"
-            variant="outlined"
-            sx={{
-              mb: 2.5,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: isLight
-                  ? alpha(theme.palette.success.main, 0.12)
-                  : theme.palette.background.paper,
-                transition: "box-shadow 0.35s ease, border-color 0.35s ease",
-                "& fieldset": {
-                  borderColor: alpha(theme.palette.text.secondary, 0.35),
-                  borderWidth: 1.5,
-                },
-                "&:hover fieldset": {
-                  borderColor: alpha(theme.palette.text.secondary, 0.7),
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: theme.palette.primary.main,
-                  borderWidth: 2,
-                  boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.08)}`,
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: theme.palette.text.primary,
-                "&::placeholder": {
-                  color: theme.palette.text.secondary,
-                  opacity: 0.55,
-                  fontStyle: "italic",
-                },
-              },
-            }}
-          />
-        </motion.div>
+              {/* TextField */}
+              <motion.div {...fadeUp(0.55)} variants={windExitVariant}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={1}
+                  value={thought}
+                  onChange={(e) => setThought(e.target.value)}
+                  placeholder="I keep thinking I messed everything up…"
+                  variant="outlined"
+                  sx={{
+                    mb: 2.5,
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: isLight
+                        ? alpha(theme.palette.success.main, 0.12)
+                        : theme.palette.background.paper,
+                      fontSize: "1.05rem",
+                      transition:
+                        "box-shadow 0.35s ease, border-color 0.35s ease",
+                      "& fieldset": {
+                        borderColor: alpha(theme.palette.text.secondary, 0.35),
+                        borderWidth: 1.5,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: alpha(theme.palette.text.secondary, 0.7),
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: theme.palette.primary.main,
+                        borderWidth: 2,
+                        boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.08)}`,
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      color: theme.palette.text.primary,
+                      "&::placeholder": {
+                        color: theme.palette.text.secondary,
+                        opacity: 0.55,
+                        fontStyle: "italic",
+                      },
+                    },
+                  }}
+                />
+              </motion.div>
 
-        {/* Prompt chips */}
-        <motion.div {...fadeUp(0.68)}>
-          <Typography
-            variant="body2"
-            sx={{
-              display: "block",
-              textAlign: "center",
-              color: theme.palette.primary.main,
-              mb: 2,
-              fontWeight: 600,
-            }}
-          >
-            or pick something that resonates
-          </Typography>
+              {/* Prompt chips */}
+              <motion.div {...fadeUp(0.68)} variants={windExitVariant}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    display: "block",
+                    textAlign: "center",
+                    color: theme.palette.info.main,
+                    mb: 2,
+                    fontWeight: 500,
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  or pick something that resonates
+                </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              justifyContent: "center",
-              mb: 5,
-            }}
-          >
-            {PROMPTS.map((prompt) => {
-              const isSelected = thought === prompt;
-              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    justifyContent: "center",
+                    mb: 5,
+                  }}
+                >
+                  {PROMPTS.map((prompt) => {
+                    const isSelected = thought === prompt;
+                    return (
+                      <motion.div
+                        key={prompt}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 350,
+                          damping: 20,
+                        }}
+                      >
+                        <Chip
+                          label={prompt}
+                          onClick={() => setThought(isSelected ? "" : prompt)}
+                          variant="outlined"
+                          sx={{
+                            cursor: "pointer",
+                            borderRadius: "999px",
+                            fontSize: "0.78rem",
+                            px: 0.5,
+                            transition: "all 0.25s ease",
+                            borderColor: isSelected
+                              ? theme.palette.primary.main
+                              : alpha(theme.palette.text.secondary, 0.25),
+                            color: isSelected
+                              ? theme.palette.primary.contrastText
+                              : theme.palette.text.secondary,
+                            backgroundColor: isSelected
+                              ? theme.palette.primary.main
+                              : alpha(theme.palette.background.paper, 0.45),
+                            "&&:hover": {
+                              borderColor: theme.palette.primary.main,
+                              backgroundColor: isSelected
+                                ? theme.palette.primary.main
+                                : alpha(theme.palette.primary.main, 0.08),
+                              color: isSelected
+                                ? theme.palette.primary.contrastText
+                                : theme.palette.primary.main,
+                            },
+                          }}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </Box>
+              </motion.div>
+
+              {/* CTA */}
+              <motion.div
+                {...fadeUp(0.8)}
+                variants={windExitVariant}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
                 <motion.div
-                  key={prompt}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.96 }}
+                  whileHover={thought.trim() && !loading ? { scale: 1.02 } : {}}
+                  whileTap={thought.trim() && !loading ? { scale: 0.98 } : {}}
                   transition={{ type: "spring", stiffness: 350, damping: 20 }}
                 >
-                  <Chip
-                    label={prompt}
-                    onClick={() => setThought(isSelected ? "" : prompt)}
-                    variant="outlined"
+                  <Button
+                    variant="contained"
+                    size="large"
+                    disabled={!thought.trim() || loading}
+                    onClick={handleExplore}
+                    startIcon={
+                      loading ? (
+                        <CircularProgress size={18} color="inherit" />
+                      ) : null
+                    }
                     sx={{
-                      cursor: "pointer",
+                      px: 5,
+                      py: 1.6,
+                      fontSize: "1rem",
                       borderRadius: "999px",
-                      fontSize: "0.78rem",
-                      px: 0.5,
-                      transition: "all 0.25s ease",
-                      borderColor: isSelected
-                        ? theme.palette.primary.main
-                        : alpha(theme.palette.text.secondary, 0.25),
-                      color: isSelected
-                        ? theme.palette.primary.contrastText
-                        : theme.palette.text.secondary,
-                      backgroundColor: isSelected
-                        ? theme.palette.primary.main
-                        : alpha(theme.palette.background.paper, 0.45),
-                      "&&:hover": {
-                        borderColor: theme.palette.primary.main,
-                        backgroundColor: isSelected
-                          ? theme.palette.primary.main
-                          : alpha(theme.palette.primary.main, 0.08),
-                        color: isSelected
-                          ? theme.palette.primary.contrastText
-                          : theme.palette.primary.main,
-                      },
+                      minWidth: 230,
+                      letterSpacing: "0.02em",
+                      boxShadow:
+                        thought.trim() && !loading
+                          ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.3)}`
+                          : "none",
+                      transition: "box-shadow 0.35s ease, opacity 0.35s ease",
                     }}
-                  />
+                  >
+                    {loading ? "Exploring…" : "Explore this thought"}
+                  </Button>
                 </motion.div>
-              );
-            })}
-          </Box>
-        </motion.div>
 
-        {/* CTA */}
-        <motion.div
-          {...fadeUp(0.8)}
-          style={{ display: "flex", justifyContent: "center" }}
-        >
-          <motion.div
-            whileHover={thought.trim() && !loading ? { scale: 1.02 } : {}}
-            whileTap={thought.trim() && !loading ? { scale: 0.98 } : {}}
-            transition={{ type: "spring", stiffness: 350, damping: 20 }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              disabled={!thought.trim() || loading}
-              onClick={handleExplore}
-              startIcon={
-                loading ? <CircularProgress size={18} color="inherit" /> : null
-              }
-              sx={{
-                px: 5,
-                py: 1.6,
-                fontSize: "1rem",
-                borderRadius: "999px",
-                minWidth: 230,
-                boxShadow:
-                  thought.trim() && !loading
-                    ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.3)}`
-                    : "none",
-                transition: "box-shadow 0.35s ease, opacity 0.35s ease",
-              }}
-            >
-              {loading ? "Exploring…" : "Explore this thought"}
-            </Button>
+                {error && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 2,
+                      textAlign: "center",
+                      color: theme.palette.error.main,
+                    }}
+                  >
+                    {error}
+                  </Typography>
+                )}
+              </motion.div>
+
+              {/* Reassurance */}
+              <motion.div {...fadeUp(0.95)} variants={windExitVariant}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: "block",
+                    textAlign: "center",
+                    mt: 4,
+                    color: theme.palette.success.main,
+                    fontWeight: 500,
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  Private · Judgment-free · Just for you
+                </Typography>
+              </motion.div>
+            </Container>
           </motion.div>
+        )}
 
-          {/* Inline error */}
-          {error && (
-            <Typography
-              variant="body2"
-              sx={{
-                mt: 2,
-                textAlign: "center",
-                color: theme.palette.error.main,
-              }}
-            >
-              {error}
-            </Typography>
-          )}
-        </motion.div>
-
-        {/* Reassurance footer */}
-        <motion.div {...fadeUp(0.95)}>
-          <Typography
-            variant="caption"
-            sx={{
-              display: "block",
-              textAlign: "center",
-              mt: 4,
-              color: theme.palette.warning.main,
-              fontWeight: 500,
-              letterSpacing: "0.06em",
-            }}
+        {/* ── Response phase ───────────────────────────────────────────────── */}
+        {phase === "response" && responseData && (
+          <motion.div
+            key="response-scene"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            style={{ position: "relative", zIndex: 1 }}
           >
-            Private · Judgment-free · Just for you
-          </Typography>
-        </motion.div>
-      </Container>
+            <ResponseScene
+              thought={thought}
+              data={responseData}
+              onReset={handleReset}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }
