@@ -14,10 +14,42 @@ import { AnimatePresence, motion } from "motion/react";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useAccent } from "@/hooks/useAccent";
+import { useColorMode } from "@/context/ColorModeContext";
 
 interface Props {
   thought: string;
   thoughts: string[];
+}
+
+// ─── Sentiment scorer (0 = very negative, 100 = very positive) ────────────────
+
+const NEG_WORDS = [
+  "fail", "failur", "panic", "hopeless", "worthless", "hate", "awful", "terrible",
+  "horrible", "scared", "fear", "anxious", "anxiety", "depress", "destroy", "ruin",
+  "disaster", "stuck", "trapped", "broken", "shame", "humiliat", "useless", "stupid",
+  "burden", "alone", "nobody", "cry", "crying", "cannot", "can't", "won't", "never",
+  "always wrong", "everything wrong", "nothing works", "no one", "lost", "overwhelm",
+  "devastat", "miserable", "regret", "disappoint", "exhaust", "powerless",
+  // TR
+  "korku", "panik", "başaramıyorum", "mahvoldum", "berbat", "korkunç", "utanç",
+  "hayal kırıklığı", "endişe", "yalnız", "çaresiz", "yorgun", "pişman",
+];
+
+const POS_WORDS = [
+  "hope", "better", "good", "great", "happy", "love", "excit", "confident", "strong",
+  "proud", "grateful", "thankful", "calm", "peace", "joy", "progress", "improve",
+  "success", "learn", "grow", "capable", "relief", "trust", "accept", "okay",
+  // TR
+  "umut", "iyi", "güzel", "mutlu", "heyecan", "güven", "başardım", "seviyorum",
+  "teşekkür", "huzur", "gelişim", "öğren", "kabul", "rahat",
+];
+
+function sentimentScore(text: string): number {
+  const lower = text.toLowerCase();
+  let score = 50;
+  NEG_WORDS.forEach((w) => { if (lower.includes(w)) score -= 8; });
+  POS_WORDS.forEach((w) => { if (lower.includes(w)) score += 8; });
+  return Math.min(100, Math.max(0, score));
 }
 
 export default function ThoughtCard({ thoughts }: Props) {
@@ -32,6 +64,10 @@ export default function ThoughtCard({ thoughts }: Props) {
 
   const theme = useTheme();
   const accent = useAccent();
+  const { isTrMode } = useColorMode();
+  const t = isTrMode
+    ? { header: "paylaştıkların", prev: "Önceki düşünce", next: "Sonraki düşünce" }
+    : { header: "what you shared", prev: "Earlier thought", next: "Later thought" };
 
   const canPrev = index > 0;
   const canNext = index < thoughts.length - 1;
@@ -81,7 +117,7 @@ export default function ThoughtCard({ thoughts }: Props) {
               fontSize: "0.65rem",
             }}
           >
-            what you shared
+            {t.header}
           </Typography>
 
           {thoughts.length > 1 && (
@@ -128,6 +164,65 @@ export default function ThoughtCard({ thoughts }: Props) {
           </AnimatePresence>
         </Box>
 
+        {/* Sentiment bar */}
+        <Box sx={{ mt: 2, mb: thoughts.length > 1 ? 0.5 : 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 0.5,
+            }}
+          >
+            <Typography sx={{ fontSize: "0.8rem", lineHeight: 1 }}>😔</Typography>
+            <Typography sx={{ fontSize: "0.8rem", lineHeight: 1 }}>😊</Typography>
+          </Box>
+          <Box
+            sx={{
+              position: "relative",
+              height: 6,
+              borderRadius: "999px",
+              background: `linear-gradient(to right,
+                #ef4444 0%,
+                #f97316 25%,
+                #eab308 50%,
+                #84cc16 75%,
+                #22c55e 100%)`,
+              overflow: "hidden",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: alpha(theme.palette.background.paper, 0.85),
+                  borderRadius: "999px",
+                  transformOrigin: "right",
+                }}
+              >
+                <motion.div
+                  initial={{ width: "100%" }}
+                  animate={{ width: `${100 - sentimentScore(thoughts[index])}%` }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    height: "100%",
+                    borderRadius: "999px",
+                  }}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+        </Box>
+
         {/* Navigation arrows (only if multiple thoughts) */}
         {thoughts.length > 1 && (
           <Box
@@ -135,10 +230,10 @@ export default function ThoughtCard({ thoughts }: Props) {
               display: "flex",
               justifyContent: "flex-end",
               gap: 0.5,
-              mt: 1,
+              mt: 0.5,
             }}
           >
-            <Tooltip title="Earlier thought">
+            <Tooltip title={t.prev}>
               <span>
                 <IconButton
                   size="small"
@@ -155,7 +250,7 @@ export default function ThoughtCard({ thoughts }: Props) {
               </span>
             </Tooltip>
 
-            <Tooltip title="Later thought">
+            <Tooltip title={t.next}>
               <span>
                 <IconButton
                   size="small"

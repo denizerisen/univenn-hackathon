@@ -18,6 +18,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { useAccent } from "@/hooks/useAccent";
+import { useColorMode } from "@/context/ColorModeContext";
 
 function ThinkingDots({ accent }: { accent: string }) {
   return (
@@ -57,16 +58,28 @@ interface Props {
   onNewThought: (thought: string) => void;
 }
 
-const PATH_PROMPTS: Record<ThoughtPath["type"], string> = {
+const PATH_PROMPTS_EN: Record<ThoughtPath["type"], string> = {
   worst_case: "Sit with this honestly",
   most_likely: "Rest in what's likely",
   positive: "Carry this kinder view",
 };
 
-const PATH_PLACEHOLDERS: Record<ThoughtPath["type"], string> = {
+const PATH_PROMPTS_TR: Record<ThoughtPath["type"], string> = {
+  worst_case: "Aklında bir şey var mı?",
+  most_likely: "Aklında bir şey var mı?",
+  positive: "Aklında bir şey var mı?",
+};
+
+const PATH_PLACEHOLDERS_EN: Record<ThoughtPath["type"], string> = {
   worst_case: "What feels most uncertain or scary right now…",
   most_likely: "What do you actually think will happen…",
   positive: "What might a gentler version of this look like…",
+};
+
+const PATH_PLACEHOLDERS_TR: Record<ThoughtPath["type"], string> = {
+  worst_case: "Şu an en belirsiz ya da korkutucu hissettiren ne…",
+  most_likely: "Gerçekte ne olacağını düşünüyorsun…",
+  positive: "Bunun daha nazik bir versiyonu nasıl görünebilir…",
 };
 
 export default function DialoguePanel({
@@ -76,16 +89,25 @@ export default function DialoguePanel({
   onReset,
   onNewThought,
 }: Props) {
-  const [selected, setSelected]   = useState<ThoughtPath["type"]>("most_likely");
+  const [selected, setSelected] = useState<ThoughtPath["type"]>("most_likely");
   const [composing, setComposing] = useState(false);
-  const [draft, setDraft]         = useState("");
-  const [seenPaths, setSeenPaths] = useState<Set<ThoughtPath["type"]>>(new Set());
+  const [draft, setDraft] = useState("");
+  const [seenPaths, setSeenPaths] = useState<Set<ThoughtPath["type"]>>(
+    new Set(),
+  );
 
   // Reset seen paths whenever new API response data arrives
-  useEffect(() => { setSeenPaths(new Set()); }, [data]);
+  useEffect(() => {
+    setSeenPaths(new Set());
+  }, [data]);
 
   const theme = useTheme();
   const accent = useAccent();
+  const { isTrMode } = useColorMode();
+  const PATH_PROMPTS = isTrMode ? PATH_PROMPTS_TR : PATH_PROMPTS_EN;
+  const PATH_PLACEHOLDERS = isTrMode
+    ? PATH_PLACEHOLDERS_TR
+    : PATH_PLACEHOLDERS_EN;
 
   const activePath =
     data.paths.find((p) => p.type === selected) ?? data.paths[0];
@@ -172,7 +194,9 @@ export default function DialoguePanel({
                     <ThinkingDots accent={accent} />
                   ) : (
                     <TypewriterText
-                      text={isLoading || !summaryDone ? "" : activePath.description}
+                      text={
+                        isLoading || !summaryDone ? "" : activePath.description
+                      }
                       instant={seenPaths.has(selected)}
                       variant="body1"
                       onDone={() =>
@@ -224,9 +248,9 @@ export default function DialoguePanel({
                         fontSize: "0.65rem",
                       }}
                     >
-                      a new thought
+                      {isTrMode ? "yeni bir düşünce" : "a new thought"}
                     </Typography>
-                    <Tooltip title="Cancel">
+                    <Tooltip title={isTrMode ? "İptal" : "Cancel"}>
                       <IconButton
                         size="small"
                         onClick={handleCancelCompose}
@@ -311,7 +335,13 @@ export default function DialoguePanel({
                           "&.Mui-disabled": { opacity: 0.45 },
                         }}
                       >
-                        {isLoading ? "Reflecting…" : "Explore this"}
+                        {isLoading
+                          ? isTrMode
+                            ? "Düşünülüyor…"
+                            : "Reflecting…"
+                          : isTrMode
+                            ? "Keşfet"
+                            : "Explore this"}
                       </Button>
                     </motion.div>
                   </Box>
@@ -340,7 +370,9 @@ export default function DialoguePanel({
                 opacity: 0.7,
               }}
             >
-              "Take a breath. You don't have to rush."
+              {isTrMode
+                ? '"Nefes al. Acele etmek zorunda değilsin."'
+                : '"Take a breath. You don\'t have to rush."'}
             </Typography>
 
             {!composing && (

@@ -193,8 +193,8 @@ export default function StartPage() {
           placeholder: "Bugün antrenman/maçta kendimi...",
           chipHint: "ya da bir tanesini seç",
           prompts: PROMPTS_TR_SPORCU,
-          ctaIdle: "Düşünceni keşfet",
-          ctaLoading: "Keşfediliyor…",
+          ctaIdle: "Zihnini Sahaya Çıkar",
+          ctaLoading: "Analiz ediliyor…",
         }
       : trRole === "izleyici"
         ? {
@@ -210,8 +210,8 @@ export default function StartPage() {
             placeholder: "Maçı izlerken içimden...",
             chipHint: "ya da bir tanesini seç",
             prompts: PROMPTS_TR_IZLEYICI,
-            ctaIdle: "Düşünceni keşfet",
-            ctaLoading: "Keşfediliyor…",
+            ctaIdle: "Yüreğini Konuştur",
+            ctaLoading: "Dinleniyor…",
           }
         : {
             overline: "DÜNYA KUPASI - TÜRK MİLLİ TAKIMI",
@@ -226,8 +226,8 @@ export default function StartPage() {
             placeholder: "Bu turnuva bende...",
             chipHint: "ya da bir tanesini seç",
             prompts: PROMPTS_TR_GENERAL,
-            ctaIdle: "Düşünceni keşfet",
-            ctaLoading: "Keşfediliyor…",
+            ctaIdle: "İçini Dök",
+            ctaLoading: "Yükleniyor…",
           }
     : {
         overline: "A ROAD NOT TAKEN",
@@ -250,6 +250,7 @@ export default function StartPage() {
 
   // Use a ref so async callbacks always read the latest value without stale closure
   const breathingActiveRef = useRef(false);
+  const textFieldRef = useRef<HTMLTextAreaElement>(null);
 
   const submitThought = async (submittedThought: string) => {
     if (!submittedThought.trim()) return;
@@ -263,6 +264,7 @@ export default function StartPage() {
         body: JSON.stringify({
           thought: submittedThought,
           ...(trRole && { role: trRole }),
+          ...(isTrMode && { language: "tr" }),
         }),
       });
 
@@ -371,9 +373,7 @@ export default function StartPage() {
         }}
       >
         {/* TR theme toggle */}
-        <Tooltip
-          title={isTrMode ? "TR temasını kapat" : "Türkiye Milli Takımı teması"}
-        >
+        <Tooltip title={isTrMode ? "TR temasını kapat" : "TR Milli Takımı"}>
           <IconButton
             onClick={toggleTrMode}
             size="small"
@@ -584,6 +584,7 @@ export default function StartPage() {
                   fullWidth
                   multiline
                   rows={1}
+                  inputRef={textFieldRef}
                   value={thought}
                   onChange={(e) => setThought(e.target.value)}
                   placeholder={content.placeholder}
@@ -668,31 +669,41 @@ export default function StartPage() {
                       >
                         <Chip
                           label={prompt}
-                          onClick={() => setThought(isSelected ? "" : prompt)}
+                          onClick={() => {
+                            setThought(isSelected ? "" : prompt);
+                            if (!isSelected) textFieldRef.current?.focus();
+                          }}
                           variant="outlined"
                           sx={{
                             cursor: "pointer",
                             borderRadius: "999px",
-                            fontSize: "0.78rem",
-                            px: 0.5,
-                            transition: "all 0.25s ease",
+                            fontSize: "0.88rem",
+                            fontWeight: 500,
+                            px: 1,
+                            py: 2.5,
+                            transition: "all 0.22s ease",
+                            borderWidth: 1.5,
                             borderColor: isSelected
                               ? theme.palette.primary.main
-                              : alpha(theme.palette.text.secondary, 0.25),
+                              : alpha(theme.palette.text.primary, 0.22),
                             color: isSelected
                               ? theme.palette.primary.contrastText
-                              : theme.palette.text.secondary,
+                              : theme.palette.text.primary,
                             backgroundColor: isSelected
                               ? theme.palette.primary.main
-                              : alpha(theme.palette.background.paper, 0.45),
+                              : alpha(theme.palette.background.paper, 0.6),
+                            boxShadow: isSelected
+                              ? `0 4px 14px ${alpha(theme.palette.primary.main, 0.3)}`
+                              : `0 2px 8px ${alpha(theme.palette.text.primary, 0.06)}`,
                             "&&:hover": {
                               borderColor: theme.palette.primary.main,
                               backgroundColor: isSelected
                                 ? theme.palette.primary.main
-                                : alpha(theme.palette.primary.main, 0.08),
+                                : alpha(theme.palette.primary.main, 0.1),
                               color: isSelected
                                 ? theme.palette.primary.contrastText
                                 : theme.palette.primary.main,
+                              boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.2)}`,
                             },
                           }}
                         />
@@ -795,6 +806,7 @@ export default function StartPage() {
               isLoading={loading}
               onReset={handleReset}
               onNewThought={handleNewThought}
+              overline={content.overline}
             />
           </motion.div>
         )}

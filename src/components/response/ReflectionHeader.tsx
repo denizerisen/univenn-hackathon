@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import type { ThoughtAnalysis } from "@/app/api/thought/route";
 import TypewriterText from "@/components/TypewriterText";
 import { useAccent } from "@/hooks/useAccent";
+import { useColorMode } from "@/context/ColorModeContext";
 
 interface Props {
   analysis: ThoughtAnalysis;
@@ -13,9 +14,14 @@ interface Props {
   onSummaryDone?: () => void;
 }
 
-export default function ReflectionHeader({ analysis, isLoading, onSummaryDone }: Props) {
+export default function ReflectionHeader({
+  analysis,
+  isLoading,
+  onSummaryDone,
+}: Props) {
   const theme = useTheme();
   const accent = useAccent();
+  const { isTrMode } = useColorMode();
 
   return (
     <motion.div
@@ -50,7 +56,7 @@ export default function ReflectionHeader({ analysis, isLoading, onSummaryDone }:
             mb: 1.5,
           }}
         >
-          a gentle reflection
+          {isTrMode ? "hızlı düşünce" : "a gentle reflection"}
         </Typography>
 
         <TypewriterText

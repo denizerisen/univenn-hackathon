@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Container } from "@mui/material";
+import { Box, Container, Typography, useTheme } from "@mui/material";
 import ThoughtCard from "./ThoughtCard";
 import ReflectionHeader from "./ReflectionHeader";
 import DialoguePanel from "./DialoguePanel";
@@ -14,6 +14,7 @@ interface Props {
   isLoading?: boolean;
   onReset: () => void;
   onNewThought: (thought: string) => void;
+  overline?: string;
 }
 
 export default function ResponseScene({
@@ -23,7 +24,9 @@ export default function ResponseScene({
   isLoading,
   onReset,
   onNewThought,
+  overline,
 }: Props) {
+  const theme = useTheme();
   const [summaryDone, setSummaryDone] = useState(false);
 
   // Reset gate whenever a new response is loading
@@ -39,11 +42,28 @@ export default function ResponseScene({
         zIndex: 1,
         minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
+        justifyContent: "center",
         py: 8,
         px: { xs: 2.5, sm: 4 },
       }}
     >
+      {overline && (
+        <Typography
+          variant="overline"
+          sx={{
+            display: "block",
+            textAlign: "center",
+            letterSpacing: "0.28em",
+            color: theme.palette.warning.main,
+            mb: 4,
+            fontSize: "0.75rem",
+            fontWeight: 600,
+          }}
+        >
+          {overline}
+        </Typography>
+      )}
       <Box
         sx={{
           display: "flex",

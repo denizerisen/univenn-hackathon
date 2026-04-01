@@ -22,25 +22,74 @@ export interface ThoughtResponse {
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(role?: string): string {
+function buildSystemPrompt(role?: string, language?: string): string {
+  const isTr = language === "tr";
+
   const roleContext =
     role === "sporcu"
-      ? `\n\nThe user has identified themselves as an ATHLETE (sporcu). 
-Tailor your response to the unique pressures athletes face: performance anxiety, fear of injury, 
-team expectations, competition stress, body image, and the identity tied to athletic success.
-Use sports-relevant framing when appropriate (e.g., mental resilience, recovery, staying grounded).`
+      ? isTr
+        ? `\n\nKullanıcı kendini SPORCU olarak tanımladı. Yanıtını sporcuların yaşadığı baskılara göre şekillendir: performans kaygısı, sakatlık korkusu, takım beklentileri, rekabet stresi, sportif kimlik. Spor diline uygun çerçeveler kullan (zihinsel dayanıklılık, toparlanma, odaklanma).`
+        : `\n\nThe user has identified themselves as an ATHLETE (sporcu). Tailor your response to the unique pressures athletes face: performance anxiety, fear of injury, team expectations, competition stress, body image, and the identity tied to athletic success. Use sports-relevant framing when appropriate (e.g., mental resilience, recovery, staying grounded).`
       : role === "izleyici"
-      ? `\n\nThe user has identified themselves as a FAN/SPECTATOR (izleyici) of a sports team — likely the Turkish national football team.
-Tailor your response to the emotional experience of passionate supporters: anxiety about match outcomes, 
-collective disappointment, over-identification with team results, and the social highs and lows of fandom.
-Use fan-relevant framing when appropriate (e.g., shared experience, perspective on outcome, separating self-worth from team results).`
+      ? isTr
+        ? `\n\nKullanıcı Türk Milli Futbol Takımı'nın bir TARAFTARI olarak kendini tanımladı. Yanıtını taraftar deneyimine göre şekillendir: maç sonucu kaygısı, kolektif hayal kırıklığı, takımla aşırı özdeşleşme, tribündeki duygusal iniş çıkışlar. Taraftar perspektifine uygun çerçeveler kullan.`
+        : `\n\nThe user has identified themselves as a FAN/SPECTATOR (izleyici) of a sports team — likely the Turkish national football team. Tailor your response to the emotional experience of passionate supporters: anxiety about match outcomes, collective disappointment, over-identification with team results, and the social highs and lows of fandom.`
+      : isTr
+      ? `\n\nKullanıcı Türkiye'nin 2026 FIFA Dünya Kupası serüveniyle ilgili düşüncelerini paylaşıyor. Yanıtını bu bağlama uygun şekilde çerçevele.`
       : "";
 
-  return `You are a calm, supportive mental wellness assistant.
+  const languageInstruction = isTr
+    ? `\n\nÖNEMLİ: Tüm yanıtını (summary, description, feeling, patterns dahil) TÜRKÇE yaz. "title" alanları için şu karşılıkları kullan: positive → "Daha Nazik Bir Bakış", most_likely → "Büyük İhtimalle", worst_case → "En Kötü Senaryo".`
+    : "";
+
+  const base = isTr
+    ? `Sen sakin ve destekleyici bir zihinsel sağlık asistanısın.
+Kullanıcıların olumsuz düşüncelerini nazikçe yeniden çerçevelemelerine yardım ediyorsun.
+Hiçbir zaman duyguları geçersiz saymıyorsun.
+Sert veya klinik bir dil kullanmıyorsun.
+Dengeli ve gerçekçi düşünmeyi teşvik ediyorsun.${roleContext}${languageInstruction}`
+    : `You are a calm, supportive mental wellness assistant.
 You help users reframe negative thoughts gently.
 You never invalidate feelings.
 You avoid harsh or clinical language.
-You encourage balanced and realistic thinking.${roleContext}
+You encourage balanced and realistic thinking.${roleContext}${languageInstruction}`;
+
+  const jsonShape = isTr
+    ? `
+Yalnızca geçerli bir JSON nesnesiyle yanıt ver — markdown, açıklama veya kod bloğu kullanma.
+JSON tam olarak şu yapıda olmalıdır:
+
+{
+  "analysis": {
+    "patterns": ["düşünce kalıbı 1", "düşünce kalıbı 2"],
+    "summary": "Düşüncede fark ettiğin şeyin kısa, nazik bir açıklaması"
+  },
+  "paths": [
+    {
+      "type": "positive",
+      "title": "Daha Nazik Bir Bakış",
+      "description": "Durumun nazik ve umut verici bir yeniden çerçevelemesi",
+      "feeling": "Bu bakış açısı duygusal olarak nasıl hissettirebilir"
+    },
+    {
+      "type": "most_likely",
+      "title": "Büyük İhtimalle",
+      "description": "Muhtemelen ne olacağının gerçekçi bir açıklaması",
+      "feeling": "Bu senaryo duygusal olarak nasıl hissettirebilir"
+    },
+    {
+      "type": "worst_case",
+      "title": "En Kötü Senaryo",
+      "description": "En kötü durumun şefkatli bir açıklaması",
+      "feeling": "Bu senaryo duygusal olarak nasıl hissettirebilir"
+    }
+  ]
+}
+
+Tespit edilecek düşünce kalıpları (klinik değil, sade Türkçe etiketler kullan):
+- felaket senaryosu, ya hep ya hiç düşüncesi, zihin okuma, kehanet, kişiselleştirme,
+  duygusal akıl yürütme, "yapmalıyım" kalıpları, aşırı genelleme, filtreleme`
+    : `
 
 You must respond ONLY with a valid JSON object — no markdown, no explanation, no code fences.
 The JSON must follow this exact structure:
@@ -75,6 +124,8 @@ The JSON must follow this exact structure:
 Common thought patterns to detect (use plain language, not clinical labels):
 - catastrophizing, black-and-white thinking, mind reading, fortune telling,
   personalizing, emotional reasoning, should statements, overgeneralizing, filtering`;
+
+  return base + jsonShape;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -119,8 +170,9 @@ export async function POST(req: NextRequest) {
   // 1. Parse & validate body
   let thought: string;
   let role: string | undefined;
+  let language: string | undefined;
   try {
-    const body = await req.json() as { thought?: unknown; role?: unknown };
+    const body = await req.json() as { thought?: unknown; role?: unknown; language?: unknown };
     if (typeof body.thought !== "string" || !body.thought.trim()) {
       return NextResponse.json(
         { error: "Request body must include a non-empty `thought` string." },
@@ -130,6 +182,9 @@ export async function POST(req: NextRequest) {
     thought = body.thought.trim();
     if (body.role === "sporcu" || body.role === "izleyici") {
       role = body.role;
+    }
+    if (body.language === "tr") {
+      language = "tr";
     }
   } catch {
     return NextResponse.json(
@@ -144,7 +199,7 @@ export async function POST(req: NextRequest) {
     const message = await client.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 2048,
-      system: buildSystemPrompt(role),
+      system: buildSystemPrompt(role, language),
       messages: [
         {
           role: "user",
