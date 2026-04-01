@@ -505,7 +505,7 @@ export default function StartPage() {
                   variant="body1"
                   sx={{
                     textAlign: "center",
-                    mb: 5,
+                    mb: 3,
                     px: 2,
                     color: theme.palette.text.primary,
                     fontSize: "1.1rem",
@@ -523,7 +523,7 @@ export default function StartPage() {
                       display: "flex",
                       justifyContent: "center",
                       gap: 1.5,
-                      mb: 4,
+                      mb: 3,
                     }}
                   >
                     {(["sporcu", "izleyici"] as const).map((role) => {
