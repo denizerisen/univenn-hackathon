@@ -14,7 +14,7 @@ const gradients = {
 };
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = React.useState<"light" | "dark">("light");
+  const [mode, setMode] = React.useState<"light" | "dark">("dark");
 
   const toggleMode = React.useCallback(() => {
     setMode((prev) => (prev === "light" ? "dark" : "light"));

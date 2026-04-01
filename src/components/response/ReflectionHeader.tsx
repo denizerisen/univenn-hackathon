@@ -4,12 +4,15 @@ import { Box, Chip, Paper, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { motion } from "motion/react";
 import type { ThoughtAnalysis } from "@/app/api/thought/route";
+import TypewriterText from "@/components/TypewriterText";
 
 interface Props {
   analysis: ThoughtAnalysis;
+  isLoading?: boolean;
+  onSummaryDone?: () => void;
 }
 
-export default function ReflectionHeader({ analysis }: Props) {
+export default function ReflectionHeader({ analysis, isLoading, onSummaryDone }: Props) {
   const theme = useTheme();
   const accent =
     theme.palette.mode === "dark"
@@ -52,15 +55,25 @@ export default function ReflectionHeader({ analysis }: Props) {
           a gentle reflection
         </Typography>
 
-        <Typography
+        <TypewriterText
+          text={isLoading ? "" : analysis.summary}
           variant="body1"
+          delay={300}
+          onDone={onSummaryDone}
           sx={{ color: theme.palette.text.primary, fontSize: "0.95rem" }}
-        >
-          {analysis.summary}
-        </Typography>
+        />
 
         {analysis.patterns.length > 0 && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.75,
+              mt: 2,
+              opacity: isLoading ? 0 : 1,
+              transition: "opacity 0.3s ease",
+            }}
+          >
             {analysis.patterns.map((pattern) => (
               <Chip
                 key={pattern}

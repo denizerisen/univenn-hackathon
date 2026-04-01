@@ -23,50 +23,12 @@ import type { ThoughtResponse } from "@/app/api/thought/route";
 
 // ─── Mock data (remove when API is wired up) ──────────────────────────────────
 
-const MOCK_THOUGHT = "I keep thinking I messed everything up…";
-
-const MOCK_RESPONSE: ThoughtResponse = {
-  analysis: {
-    patterns: [
-      "catastrophizing",
-      "fortune telling",
-      "black-and-white thinking",
-    ],
-    summary:
-      "It sounds like you're being really hard on yourself right now. This thought carries a lot of weight, and it's natural to feel overwhelmed. What you're experiencing is a very human pattern where our minds jump to the most difficult conclusion.",
-  },
-  paths: [
-    {
-      type: "positive",
-      title: "A Kinder Perspective",
-      description:
-        "What if this moment is actually an invitation to grow? You're noticing something, reflecting on it — that takes courage. You've moved through hard things before, and this too will settle.",
-      feeling: "Gently hopeful, open to possibility",
-    },
-    {
-      type: "most_likely",
-      title: "Most Likely",
-      description:
-        "In reality, most situations are more nuanced than our anxious minds suggest. People around you are likely more understanding than you give them credit for, and the damage is probably far smaller than it feels right now.",
-      feeling: "A mix of uncertainty and quiet reassurance",
-    },
-    {
-      type: "worst_case",
-      title: "Worst Case",
-      description:
-        "If the worst were true, it would feel heavy and hard. But even then, it wouldn't be permanent — you've navigated difficult moments before, and found your footing.",
-      feeling: "Overwhelmed, but not without hope",
-    },
-  ],
-};
-
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const PROMPTS = [
-  "I can't stop overthinking this",
-  "I think I embarrassed myself",
   "What if I fail?",
-  "I feel like I let someone down",
+  "I can't stop overthinking this",
+
   "I keep replaying what happened",
 ];
 
@@ -106,13 +68,14 @@ const windExitVariant = {
 type Phase = "input" | "response";
 
 export default function StartPage() {
-  const [thought, setThought] = useState(MOCK_THOUGHT);
+  const [thought, setThought] = useState("");
+  const [thoughts, setThoughts] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("response"); // TODO: reset to "input"
+  const [phase, setPhase] = useState<Phase>("input");
   const [responseData, setResponseData] = useState<ThoughtResponse | null>(
-    MOCK_RESPONSE,
-  ); // TODO: reset to null
+    null,
+  );
 
   const theme = useTheme();
   const { mode, toggleMode } = useColorMode();
@@ -120,8 +83,8 @@ export default function StartPage() {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleExplore = async () => {
-    if (!thought.trim()) return;
+  const submitThought = async (submittedThought: string) => {
+    if (!submittedThought.trim()) return;
     setLoading(true);
     setError(null);
 
@@ -129,7 +92,7 @@ export default function StartPage() {
       const res = await fetch("/api/thought", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thought }),
+        body: JSON.stringify({ thought: submittedThought }),
       });
 
       const data = (await res.json()) as ThoughtResponse & { error?: string };
@@ -139,6 +102,8 @@ export default function StartPage() {
         return;
       }
 
+      setThoughts((prev) => [...prev, submittedThought]);
+      setThought(submittedThought);
       setResponseData(data);
       setPhase("response");
     } catch {
@@ -148,11 +113,17 @@ export default function StartPage() {
     }
   };
 
+  const handleExplore = () => submitThought(thought);
+
+  /** Called from inside the response scene — no phase change, stays in response */
+  const handleNewThought = (newThought: string) => submitThought(newThought);
+
   const handleReset = () => {
     setPhase("input");
     setThought("");
     setResponseData(null);
     setError(null);
+    // thoughts history is intentionally kept across resets
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -218,7 +189,7 @@ export default function StartPage() {
             style={{ position: "relative", zIndex: 1 }}
           >
             <Container
-              maxWidth="sm"
+              maxWidth="md"
               sx={{
                 minHeight: "100vh",
                 display: "flex",
@@ -279,8 +250,14 @@ export default function StartPage() {
                   rows={1}
                   value={thought}
                   onChange={(e) => setThought(e.target.value)}
-                  placeholder="I keep thinking I messed everything up…"
+                  placeholder="I keep thinking..."
                   variant="outlined"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (thought.trim() && !loading) handleExplore();
+                    }
+                  }}
                   sx={{
                     mb: 2.5,
                     "& .MuiOutlinedInput-root": {
@@ -477,8 +454,11 @@ export default function StartPage() {
           >
             <ResponseScene
               thought={thought}
+              thoughts={thoughts}
               data={responseData}
+              isLoading={loading}
               onReset={handleReset}
+              onNewThought={handleNewThought}
             />
           </motion.div>
         )}

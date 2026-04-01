@@ -1,19 +1,53 @@
 "use client";
 
-import { Box, Paper, Typography, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import {
+  Box,
+  IconButton,
+  Paper,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 
 interface Props {
   thought: string;
+  thoughts: string[];
 }
 
-export default function ThoughtCard({ thought }: Props) {
+export default function ThoughtCard({ thoughts }: Props) {
+  const [index, setIndex] = useState(thoughts.length - 1);
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  // Always jump to the latest thought when a new one is added
+  useEffect(() => {
+    setDirection(1);
+    setIndex(thoughts.length - 1);
+  }, [thoughts.length]);
+
   const theme = useTheme();
   const accent =
     theme.palette.mode === "dark"
-      ? theme.palette.secondary.main // mauve-magic #c77dff
-      : theme.palette.success.main; // minty sage  #4C956C
+      ? theme.palette.secondary.main
+      : theme.palette.success.main;
+
+  const canPrev = index > 0;
+  const canNext = index < thoughts.length - 1;
+
+  const navigate = (dir: 1 | -1) => {
+    setDirection(dir);
+    setIndex((i) => i + dir);
+  };
+
+  const variants = {
+    enter: (d: number) => ({ opacity: 0, x: d > 0 ? 24 : -24 }),
+    center: { opacity: 1, x: 0 },
+    exit: (d: number) => ({ opacity: 0, x: d > 0 ? -24 : 24 }),
+  };
 
   return (
     <motion.div
@@ -24,7 +58,6 @@ export default function ThoughtCard({ thought }: Props) {
       <Paper
         elevation={0}
         sx={{
-          mb: 3,
           px: 3,
           py: 2,
           borderRadius: 2,
@@ -33,36 +66,115 @@ export default function ThoughtCard({ thought }: Props) {
           border: `1px solid ${alpha(accent, 0.2)}`,
         }}
       >
-        <Typography
-          variant="overline"
+        {/* Header row */}
+        <Box
           sx={{
-            display: "block",
-            color: theme.palette.info.main,
-            letterSpacing: "0.18em",
-            fontSize: "0.65rem",
-            mb: 0.75,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1,
           }}
         >
-          what you shared
-        </Typography>
+          <Typography
+            variant="overline"
+            sx={{
+              color: theme.palette.info.main,
+              letterSpacing: "0.18em",
+              fontSize: "0.65rem",
+            }}
+          >
+            what you shared
+          </Typography>
 
+          {thoughts.length > 1 && (
+            <Typography
+              variant="caption"
+              sx={{ color: theme.palette.text.secondary, opacity: 0.6 }}
+            >
+              {index + 1} / {thoughts.length}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Animated thought text */}
         <Box
           sx={{
             borderLeft: `3px solid ${alpha(accent, 0.4)}`,
             pl: 1.5,
+            minHeight: 52,
+            overflow: "hidden",
+            position: "relative",
           }}
         >
-          <Typography
-            variant="body1"
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={index}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }}
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  fontStyle: "italic",
+                  color: theme.palette.text.primary,
+                  opacity: 0.85,
+                }}
+              >
+                "{thoughts[index]}"
+              </Typography>
+            </motion.div>
+          </AnimatePresence>
+        </Box>
+
+        {/* Navigation arrows (only if multiple thoughts) */}
+        {thoughts.length > 1 && (
+          <Box
             sx={{
-              fontStyle: "italic",
-              color: theme.palette.text.primary,
-              opacity: 0.85,
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 0.5,
+              mt: 1,
             }}
           >
-            "{thought}"
-          </Typography>
-        </Box>
+            <Tooltip title="Earlier thought">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => navigate(-1)}
+                  disabled={!canPrev}
+                  sx={{
+                    color: canPrev ? accent : alpha(accent, 0.3),
+                    p: 0.25,
+                    "&:hover": { backgroundColor: alpha(accent, 0.08) },
+                  }}
+                >
+                  <ChevronLeftRoundedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            <Tooltip title="Later thought">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => navigate(1)}
+                  disabled={!canNext}
+                  sx={{
+                    color: canNext ? accent : alpha(accent, 0.3),
+                    p: 0.25,
+                    "&:hover": { backgroundColor: alpha(accent, 0.08) },
+                  }}
+                >
+                  <ChevronRightRoundedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+        )}
       </Paper>
     </motion.div>
   );

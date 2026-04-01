@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Box, Container } from "@mui/material";
 import ThoughtCard from "./ThoughtCard";
 import ReflectionHeader from "./ReflectionHeader";
@@ -8,11 +9,28 @@ import type { ThoughtResponse } from "@/app/api/thought/route";
 
 interface Props {
   thought: string;
+  thoughts: string[];
   data: ThoughtResponse;
+  isLoading?: boolean;
   onReset: () => void;
+  onNewThought: (thought: string) => void;
 }
 
-export default function ResponseScene({ thought, data, onReset }: Props) {
+export default function ResponseScene({
+  thought,
+  thoughts,
+  data,
+  isLoading,
+  onReset,
+  onNewThought,
+}: Props) {
+  const [summaryDone, setSummaryDone] = useState(false);
+
+  // Reset gate whenever a new response is loading
+  useEffect(() => {
+    if (isLoading) setSummaryDone(false);
+  }, [isLoading]);
+
   return (
     <Container
       maxWidth="lg"
@@ -45,13 +63,23 @@ export default function ResponseScene({ thought, data, onReset }: Props) {
             gap: 2,
           }}
         >
-          <ReflectionHeader analysis={data.analysis} />
-          <ThoughtCard thought={thought} />
+          <ReflectionHeader
+            analysis={data.analysis}
+            isLoading={isLoading}
+            onSummaryDone={() => setSummaryDone(true)}
+          />
+          <ThoughtCard thought={thought} thoughts={thoughts} />
         </Box>
 
         {/* Right column — 2/3: path selector + content */}
         <Box sx={{ flex: "1 1 0%", display: "flex", flexDirection: "column" }}>
-          <DialoguePanel data={data} onReset={onReset} />
+          <DialoguePanel
+            data={data}
+            isLoading={isLoading}
+            summaryDone={summaryDone}
+            onReset={onReset}
+            onNewThought={onNewThought}
+          />
         </Box>
       </Box>
     </Container>
