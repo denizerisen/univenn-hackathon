@@ -127,14 +127,14 @@ export default function StartPage() {
             sx={{
               display: "block",
               textAlign: "center",
-              letterSpacing: "0.25em",
-              color: theme.palette.text.secondary,
-              opacity: 0.6,
-              mb: 7,
-              fontSize: "0.7rem",
+              letterSpacing: "0.28em",
+              color: theme.palette.warning.main,
+              mb: 6,
+              fontSize: "1.25rem",
+              fontWeight: 900,
             }}
           >
-            thought mirror
+            A ROAD NOT TAKEN
           </Typography>
         </motion.div>
 
@@ -149,8 +149,13 @@ export default function StartPage() {
         <motion.div {...fadeUp(0.42)}>
           <Typography
             variant="body1"
-            color="text.secondary"
-            sx={{ textAlign: "center", mb: 5, opacity: 0.75, px: 2 }}
+            sx={{
+              textAlign: "center",
+              mb: 5,
+              px: 2,
+              color: theme.palette.text.primary,
+              fontSize: "1.1rem",
+            }}
           >
             You don't have to figure everything out right now.
             <br />
@@ -163,7 +168,7 @@ export default function StartPage() {
           <TextField
             fullWidth
             multiline
-            rows={5}
+            rows={1}
             value={thought}
             onChange={(e) => setThought(e.target.value)}
             placeholder="I keep thinking I messed everything up…"
@@ -171,23 +176,21 @@ export default function StartPage() {
             sx={{
               mb: 2.5,
               "& .MuiOutlinedInput-root": {
-                backgroundColor: alpha(theme.palette.background.paper, 0.55),
-
-                transition:
-                  "box-shadow 0.35s ease, background-color 0.35s ease",
-                "& fieldset": { borderColor: "transparent" },
-                "&:hover": {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.75),
+                backgroundColor: isLight
+                  ? alpha(theme.palette.success.main, 0.12)
+                  : theme.palette.background.paper,
+                transition: "box-shadow 0.35s ease, border-color 0.35s ease",
+                "& fieldset": {
+                  borderColor: alpha(theme.palette.text.secondary, 0.35),
+                  borderWidth: 1.5,
                 },
                 "&:hover fieldset": {
-                  borderColor: alpha(theme.palette.primary.main, 0.25),
-                },
-                "&.Mui-focused": {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                  borderColor: alpha(theme.palette.text.secondary, 0.7),
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: alpha(theme.palette.primary.main, 0.45),
-                  boxShadow: `0 0 0 5px ${alpha(theme.palette.primary.main, 0.08)}`,
+                  borderColor: theme.palette.primary.main,
+                  borderWidth: 2,
+                  boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.08)}`,
                 },
               },
               "& .MuiInputBase-input": {
@@ -205,14 +208,13 @@ export default function StartPage() {
         {/* Prompt chips */}
         <motion.div {...fadeUp(0.68)}>
           <Typography
-            variant="caption"
+            variant="body2"
             sx={{
               display: "block",
               textAlign: "center",
-              color: theme.palette.text.secondary,
-              opacity: 0.55,
-              mb: 1.5,
-              letterSpacing: "0.03em",
+              color: theme.palette.primary.main,
+              mb: 2,
+              fontWeight: 600,
             }}
           >
             or pick something that resonates
@@ -293,7 +295,6 @@ export default function StartPage() {
                 fontSize: "1rem",
                 borderRadius: "999px",
                 minWidth: 230,
-                letterSpacing: "0.02em",
                 boxShadow: thought.trim()
                   ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.3)}`
                   : "none",
@@ -313,9 +314,9 @@ export default function StartPage() {
               display: "block",
               textAlign: "center",
               mt: 4,
-              color: theme.palette.text.secondary,
-              opacity: 0.4,
-              letterSpacing: "0.02em",
+              color: theme.palette.warning.main,
+              fontWeight: 500,
+              letterSpacing: "0.06em",
             }}
           >
             Private · Judgment-free · Just for you

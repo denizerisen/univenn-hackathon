@@ -72,6 +72,9 @@ export function getTheme(mode: PaletteMode) {
         ...(!isDark && { contrastText: light.primaryContrast }),
       },
       secondary: { main: c.secondary },
+      warning:   { main: isDark ? "#c77dff" : "#D68C45" },  // copper / mauve-magic
+      info:      { main: isDark ? "#9d4edd" : "#8BB3C8" },  // lavender / misty blue
+      success:   { main: isDark ? "#4C956C" : "#4C956C" },  // mauve / minty sage
       background: {
         default: c.bgDefault,
         paper: c.bgPaper,
@@ -93,10 +96,10 @@ export function getTheme(mode: PaletteMode) {
       h4: { fontWeight: 700, lineHeight: 1.3,  color: c.heading },
       h5: { fontWeight: 700, lineHeight: 1.35, color: c.heading },
       h6: { fontWeight: 700, lineHeight: 1.4,  color: c.heading },
-      body1: { fontSize: "1rem",   lineHeight: 1.75 },
-      body2: { fontSize: "0.875rem", lineHeight: 1.65 },
-      caption: { lineHeight: 1.5 },
-      button: { textTransform: "none", fontWeight: 600, lineHeight: 1.5 },
+      body1:   { fontSize: "1.05rem",  lineHeight: 1.75 },
+      body2:   { fontSize: "0.95rem",  lineHeight: 1.65 },
+      caption: { fontSize: "0.85rem",  lineHeight: 1.5  },
+      button:  { textTransform: "none", fontWeight: 600, lineHeight: 1.5 },
     },
 
     components: {
