@@ -87,14 +87,16 @@ export function getTheme(mode: PaletteMode) {
 
     typography: {
       fontFamily: `var(--font-quicksand), "Quicksand", sans-serif`,
-      h1: { fontWeight: 700, color: c.heading },
-      h2: { fontWeight: 700, color: c.heading },
-      h3: { fontWeight: 700, color: c.heading },
-      h4: { fontWeight: 700, color: c.heading },
-      h5: { fontWeight: 700, color: c.heading },
-      h6: { fontWeight: 700, color: c.heading },
-      body1: { fontSize: "1rem", lineHeight: 1.6 },
-      button: { textTransform: "none", fontWeight: 600 },
+      h1: { fontWeight: 700, lineHeight: 1.15, color: c.heading },
+      h2: { fontWeight: 700, lineHeight: 1.2,  color: c.heading },
+      h3: { fontWeight: 700, lineHeight: 1.25, color: c.heading },
+      h4: { fontWeight: 700, lineHeight: 1.3,  color: c.heading },
+      h5: { fontWeight: 700, lineHeight: 1.35, color: c.heading },
+      h6: { fontWeight: 700, lineHeight: 1.4,  color: c.heading },
+      body1: { fontSize: "1rem",   lineHeight: 1.75 },
+      body2: { fontSize: "0.875rem", lineHeight: 1.65 },
+      caption: { lineHeight: 1.5 },
+      button: { textTransform: "none", fontWeight: 600, lineHeight: 1.5 },
     },
 
     components: {

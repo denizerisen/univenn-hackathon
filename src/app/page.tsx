@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import Link from "next/link";
 import { useColorMode } from "@/context/ColorModeContext";
 import { useTheme } from "@mui/material/styles";
 
@@ -89,7 +90,13 @@ export default function Home() {
 
         <Stack direction="row" spacing={2}>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-            <Button color="primary" variant="contained" size="large">
+            <Button
+              component={Link}
+              href="/start"
+              color="primary"
+              variant="contained"
+              size="large"
+            >
               Get Started
             </Button>
           </motion.div>
