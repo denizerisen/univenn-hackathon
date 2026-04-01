@@ -18,13 +18,13 @@ const PATH_META: Record<
   ThoughtPath["type"],
   { icon: React.ReactNode; order: number }
 > = {
-  worst_case:  { icon: <CloudOutlinedIcon fontSize="small" />, order: 0 },
+  positive:    { icon: <SpaOutlinedIcon fontSize="small" />,   order: 0 },
   most_likely: { icon: <WbSunnyOutlinedIcon fontSize="small" />, order: 1 },
-  positive:    { icon: <SpaOutlinedIcon fontSize="small" />, order: 2 },
+  worst_case:  { icon: <CloudOutlinedIcon fontSize="small" />,  order: 2 },
 };
 
-// Sort so selector always appears: worst → most likely → positive
-const TYPE_ORDER: ThoughtPath["type"][] = ["worst_case", "most_likely", "positive"];
+// Sort so selector always appears: positive → most likely → worst case
+const TYPE_ORDER: ThoughtPath["type"][] = ["positive", "most_likely", "worst_case"];
 
 export default function PathSelector({ paths, selected, onSelect }: Props) {
   const theme = useTheme();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Box,
@@ -19,6 +19,7 @@ import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import { useColorMode } from "@/context/ColorModeContext";
 import ResponseScene from "@/components/response/ResponseScene";
+import BreathingLoader from "@/components/response/BreathingLoader";
 import type { ThoughtResponse } from "@/app/api/thought/route";
 
 // ─── Mock data (remove when API is wired up) ──────────────────────────────────
@@ -67,21 +68,60 @@ const windExitVariant = {
 
 type Phase = "input" | "response";
 
+// ─── Tension detection ────────────────────────────────────────────────────────
+
+// High-intensity words that trigger breathing on their own
+const HIGH_TENSION_WORDS = [
+  "panic", "panicking", "breakdown", "suicid", "self-harm",
+  "hopeless", "worthless", "can't breathe", "falling apart",
+  "overwhelmed", "devastated", "can't cope", "can't go on",
+  "hate myself", "hate my life", "want to disappear",
+];
+
+// Moderate words — need 2+ to trigger
+const MODERATE_TENSION_WORDS = [
+  "terrible", "horrible", "awful", "scared", "fear", "anxiety", "anxious",
+  "depressed", "destroy", "ruined", "disaster", "failure", "fail",
+  "alone", "stuck", "trapped", "broken", "shame", "ashamed", "humiliated",
+  "embarrassed", "useless", "stupid", "burden", "crying", "cannot",
+  "everything wrong", "nothing works", "no one cares", "nobody",
+];
+
+function isTense(text: string): boolean {
+  const lower = text.toLowerCase();
+  if (HIGH_TENSION_WORDS.some((w) => lower.includes(w))) return true;
+  const moderateHits = MODERATE_TENSION_WORDS.filter((w) => lower.includes(w));
+  return moderateHits.length >= 2;
+}
+
+const CALMING_MESSAGES = [
+  "That sounds like a lot to carry right now. Let's take a breath together before we dive in.",
+  "It's okay to feel overwhelmed. You don't have to rush — breathe with us for a moment.",
+  "That feeling deserves a gentle pause. Let's breathe first, then look at it together.",
+];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function StartPage() {
-  const [thought, setThought] = useState("");
+  const [thought, setThought]   = useState("");
   const [thoughts, setThoughts] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("input");
-  const [responseData, setResponseData] = useState<ThoughtResponse | null>(
-    null,
-  );
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [phase, setPhase]       = useState<Phase>("input");
+  const [responseData, setResponseData] = useState<ThoughtResponse | null>(null);
+
+  // Guided breathing state
+  const [breathingMessage, setBreathingMessage]   = useState<string | null>(null);
+  const [continueRequested, setContinueRequested] = useState(false);
 
   const theme = useTheme();
   const { mode, toggleMode } = useColorMode();
   const isLight = mode === "light";
 
   // ── Handlers ────────────────────────────────────────────────────────────────
+
+  // Use a ref so async callbacks always read the latest value without stale closure
+  const breathingActiveRef = useRef(false);
 
   const submitThought = async (submittedThought: string) => {
     if (!submittedThought.trim()) return;
@@ -99,30 +139,64 @@ export default function StartPage() {
 
       if (!res.ok) {
         setError(data.error ?? "Something went wrong. Please try again.");
+        setBreathingMessage(null);
+        breathingActiveRef.current = false;
         return;
       }
 
       setThoughts((prev) => [...prev, submittedThought]);
       setThought(submittedThought);
       setResponseData(data);
-      setPhase("response");
+
+      // Only auto-transition if breathing overlay is NOT active —
+      // the user must explicitly press skip/continue
+      if (!breathingActiveRef.current) {
+        setPhase("response");
+      }
+      // else: data is ready but we wait for handleBreathingContinue
     } catch {
       setError("Could not reach the server. Please check your connection.");
+      setBreathingMessage(null);
+      breathingActiveRef.current = false;
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExplore = () => submitThought(thought);
+  const handleExplore = () => {
+    const msg = isTense(thought)
+      ? CALMING_MESSAGES[Math.floor(Math.random() * CALMING_MESSAGES.length)]
+      : null;
+    breathingActiveRef.current = !!msg;
+    setBreathingMessage(msg);
+    setContinueRequested(false);
+    submitThought(thought);
+  };
+
+  /** Called when user presses "skip to my reflection" on the breathing overlay */
+  const handleBreathingContinue = () => {
+    setContinueRequested(true);
+    breathingActiveRef.current = false;
+    setBreathingMessage(null);
+    // If API already finished, transition now; otherwise submitThought will do it
+    if (responseData) setPhase("response");
+  };
 
   /** Called from inside the response scene — no phase change, stays in response */
-  const handleNewThought = (newThought: string) => submitThought(newThought);
+  const handleNewThought = (newThought: string) => {
+    breathingActiveRef.current = false;
+    setBreathingMessage(null);
+    submitThought(newThought);
+  };
 
   const handleReset = () => {
     setPhase("input");
     setThought("");
     setResponseData(null);
     setError(null);
+    setBreathingMessage(null);
+    setContinueRequested(false);
+    breathingActiveRef.current = false;
     // thoughts history is intentionally kept across resets
   };
 
@@ -177,6 +251,17 @@ export default function StartPage() {
           </IconButton>
         </Tooltip>
       </Box>
+
+      {/* ── Guided breathing overlay ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {breathingMessage && (
+          <BreathingLoader
+            message={breathingMessage}
+            apiReady={!loading}
+            onContinue={handleBreathingContinue}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Phase content ─────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
