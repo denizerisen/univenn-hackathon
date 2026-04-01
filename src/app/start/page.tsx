@@ -21,6 +21,45 @@ import { useColorMode } from "@/context/ColorModeContext";
 import ResponseScene from "@/components/response/ResponseScene";
 import type { ThoughtResponse } from "@/app/api/thought/route";
 
+// ─── Mock data (remove when API is wired up) ──────────────────────────────────
+
+const MOCK_THOUGHT = "I keep thinking I messed everything up…";
+
+const MOCK_RESPONSE: ThoughtResponse = {
+  analysis: {
+    patterns: [
+      "catastrophizing",
+      "fortune telling",
+      "black-and-white thinking",
+    ],
+    summary:
+      "It sounds like you're being really hard on yourself right now. This thought carries a lot of weight, and it's natural to feel overwhelmed. What you're experiencing is a very human pattern where our minds jump to the most difficult conclusion.",
+  },
+  paths: [
+    {
+      type: "positive",
+      title: "A Kinder Perspective",
+      description:
+        "What if this moment is actually an invitation to grow? You're noticing something, reflecting on it — that takes courage. You've moved through hard things before, and this too will settle.",
+      feeling: "Gently hopeful, open to possibility",
+    },
+    {
+      type: "most_likely",
+      title: "Most Likely",
+      description:
+        "In reality, most situations are more nuanced than our anxious minds suggest. People around you are likely more understanding than you give them credit for, and the damage is probably far smaller than it feels right now.",
+      feeling: "A mix of uncertainty and quiet reassurance",
+    },
+    {
+      type: "worst_case",
+      title: "Worst Case",
+      description:
+        "If the worst were true, it would feel heavy and hard. But even then, it wouldn't be permanent — you've navigated difficult moments before, and found your footing.",
+      feeling: "Overwhelmed, but not without hope",
+    },
+  ],
+};
+
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const PROMPTS = [
@@ -67,13 +106,13 @@ const windExitVariant = {
 type Phase = "input" | "response";
 
 export default function StartPage() {
-  const [thought, setThought] = useState("");
+  const [thought, setThought] = useState(MOCK_THOUGHT);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("input");
+  const [phase, setPhase] = useState<Phase>("response"); // TODO: reset to "input"
   const [responseData, setResponseData] = useState<ThoughtResponse | null>(
-    null,
-  );
+    MOCK_RESPONSE,
+  ); // TODO: reset to null
 
   const theme = useTheme();
   const { mode, toggleMode } = useColorMode();
@@ -203,7 +242,7 @@ export default function StartPage() {
                     fontWeight: 600,
                   }}
                 >
-                  thought mirror
+                  A ROAD NOT TAKEN
                 </Typography>
               </motion.div>
 

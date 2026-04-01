@@ -10,6 +10,10 @@ interface Props {
 
 export default function ThoughtCard({ thought }: Props) {
   const theme = useTheme();
+  const accent =
+    theme.palette.mode === "dark"
+      ? theme.palette.secondary.main // mauve-magic #c77dff
+      : theme.palette.success.main; // minty sage  #4C956C
 
   return (
     <motion.div
@@ -20,15 +24,13 @@ export default function ThoughtCard({ thought }: Props) {
       <Paper
         elevation={0}
         sx={{
-          maxWidth: 480,
-          mx: "auto",
           mb: 3,
           px: 3,
           py: 2,
-          borderRadius: 3,
-          backgroundColor: alpha(theme.palette.background.paper, 0.7),
+          borderRadius: 2,
+          backgroundColor: alpha(theme.palette.background.paper, 0.8),
           backdropFilter: "blur(10px)",
-          border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+          border: `1px solid ${alpha(accent, 0.2)}`,
         }}
       >
         <Typography
@@ -43,9 +45,10 @@ export default function ThoughtCard({ thought }: Props) {
         >
           what you shared
         </Typography>
+
         <Box
           sx={{
-            borderLeft: `3px solid ${alpha(theme.palette.success.main, 0.4)}`,
+            borderLeft: `3px solid ${alpha(accent, 0.4)}`,
             pl: 1.5,
           }}
         >

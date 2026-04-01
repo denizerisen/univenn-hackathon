@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Chip, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Button, Paper, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { AnimatePresence, motion } from "motion/react";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
@@ -14,96 +14,59 @@ interface Props {
 }
 
 export default function DialoguePanel({ data, onReset }: Props) {
-  const theme = useTheme();
   const [selected, setSelected] = useState<ThoughtPath["type"]>("most_likely");
+  const theme = useTheme();
+  const accent =
+    theme.palette.mode === "dark"
+      ? theme.palette.secondary.main // mauve-magic #c77dff
+      : theme.palette.success.main; // minty sage  #4C956C
 
-  const activePath = data.paths.find((p) => p.type === selected) ?? data.paths[0];
+  const activePath =
+    data.paths.find((p) => p.type === selected) ?? data.paths[0];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 44 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.65, delay: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
+      transition={{
+        duration: 0.65,
+        delay: 0.25,
+        ease: [0.22, 1, 0.36, 1] as const,
+      }}
+      style={{ height: "100%", display: "flex", flexDirection: "column" }}
     >
       <Paper
         elevation={0}
         sx={{
-          maxWidth: 560,
-          mx: "auto",
-          borderRadius: 4,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 2,
           overflow: "hidden",
-          backgroundColor: alpha(theme.palette.background.paper, 0.92),
+          backgroundColor: alpha(theme.palette.background.paper, 0.93),
           backdropFilter: "blur(16px)",
-          border: `1px solid ${alpha(theme.palette.success.main, 0.18)}`,
+          border: `1px solid ${alpha(accent, 0.18)}`,
           boxShadow: `0 24px 64px ${alpha(theme.palette.text.primary, 0.1)}`,
-          // Visual novel left accent stripe
-          borderLeft: `4px solid ${alpha(theme.palette.success.main, 0.55)}`,
+          borderLeft: `4px solid ${alpha(accent, 0.55)}`,
         }}
       >
-        {/* ── Panel header ──────────────────────────────────────────── */}
+        {/* ── Path selector + content ────────────────────────────────── */}
         <Box
           sx={{
             px: 3.5,
             pt: 3,
-            pb: 2,
-            borderBottom: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
+            pb: 3,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          <Typography
-            variant="overline"
-            sx={{
-              color: theme.palette.success.main,
-              letterSpacing: "0.2em",
-              fontSize: "0.65rem",
-              fontWeight: 600,
-            }}
-          >
-            a gentle reflection
-          </Typography>
-
-          {/* Summary */}
-          <Typography
-            variant="body1"
-            sx={{
-              mt: 1.5,
-              color: theme.palette.text.primary,
-              fontSize: "1rem",
-            }}
-          >
-            {data.analysis.summary}
-          </Typography>
-
-          {/* Pattern chips */}
-          {data.analysis.patterns.length > 0 && (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 2 }}>
-              {data.analysis.patterns.map((pattern) => (
-                <Chip
-                  key={pattern}
-                  label={pattern}
-                  size="small"
-                  sx={{
-                    borderRadius: "999px",
-                    fontSize: "0.72rem",
-                    fontWeight: 500,
-                    backgroundColor: alpha(theme.palette.success.main, 0.1),
-                    color: theme.palette.success.main,
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`,
-                  }}
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
-
-        {/* ── Path selector + content ────────────────────────────────── */}
-        <Box sx={{ px: 3.5, pt: 2.5, pb: 3 }}>
           <PathSelector
             paths={data.paths}
             selected={selected}
             onSelect={setSelected}
           />
 
-          {/* Animated path content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={selected}
@@ -115,59 +78,23 @@ export default function DialoguePanel({ data, onReset }: Props) {
               <Box
                 sx={{
                   p: 2.5,
-                  borderRadius: 3,
-                  backgroundColor: alpha(theme.palette.success.main, 0.05),
-                  border: `1px solid ${alpha(theme.palette.success.main, 0.12)}`,
+                  borderRadius: 1,
+                  backgroundColor: alpha(accent, 0.05),
+                  border: `1px solid ${alpha(accent, 0.12)}`,
                   mb: 3,
+                  flex: 1,
                 }}
               >
                 <Typography
                   variant="body1"
-                  sx={{
-                    color: theme.palette.text.primary,
-                    mb: 2,
-                  }}
+                  sx={{ color: theme.palette.text.primary, mb: 2 }}
                 >
                   {activePath.description}
                 </Typography>
-
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 1,
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: "999px",
-                    backgroundColor: alpha(theme.palette.warning.main, 0.12),
-                    border: `1px solid ${alpha(theme.palette.warning.main, 0.25)}`,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: theme.palette.warning.main,
-                      fontWeight: 600,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    feeling:
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: theme.palette.text.primary,
-                      fontStyle: "italic",
-                    }}
-                  >
-                    {activePath.feeling}
-                  </Typography>
-                </Box>
               </Box>
             </motion.div>
           </AnimatePresence>
 
-          {/* Footer */}
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
@@ -176,16 +103,16 @@ export default function DialoguePanel({ data, onReset }: Props) {
                 onClick={onReset}
                 startIcon={<ReplayRoundedIcon fontSize="small" />}
                 sx={{
-                  borderRadius: "999px",
+                  borderRadius: 2,
                   px: 2.5,
                   py: 0.75,
                   fontSize: "0.82rem",
-                  borderColor: alpha(theme.palette.text.secondary, 0.35),
-                  color: theme.palette.text.secondary,
+                  borderColor: alpha(accent, 0.35),
+                  color: accent,
                   "&:hover": {
-                    borderColor: theme.palette.success.main,
-                    color: theme.palette.success.main,
-                    backgroundColor: alpha(theme.palette.success.main, 0.06),
+                    borderColor: theme.palette.text.primary,
+                    color: theme.palette.text.primary,
+                    backgroundColor: alpha(accent, 0.06),
                   },
                 }}
               >

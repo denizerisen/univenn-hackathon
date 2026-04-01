@@ -28,6 +28,9 @@ const TYPE_ORDER: ThoughtPath["type"][] = ["worst_case", "most_likely", "positiv
 
 export default function PathSelector({ paths, selected, onSelect }: Props) {
   const theme = useTheme();
+  const accent = theme.palette.mode === "dark"
+    ? theme.palette.secondary.main   // mauve-magic #c77dff
+    : theme.palette.success.main;    // minty sage  #4C956C
 
   const sorted = TYPE_ORDER
     .map((t) => paths.find((p) => p.type === t))
@@ -37,8 +40,8 @@ export default function PathSelector({ paths, selected, onSelect }: Props) {
     <Box
       sx={{
         display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
         gap: 1,
-        flexWrap: "wrap",
         mb: 2.5,
       }}
     >
@@ -52,7 +55,7 @@ export default function PathSelector({ paths, selected, onSelect }: Props) {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 350, damping: 22 }}
-            style={{ flex: 1, minWidth: 100 }}
+            style={{ flex: 1 }}
           >
             <Box
               onClick={() => onSelect(path.type)}
@@ -69,28 +72,32 @@ export default function PathSelector({ paths, selected, onSelect }: Props) {
                 transition: "all 0.25s ease",
                 border: `1.5px solid ${
                   isSelected
-                    ? theme.palette.success.main
+                    ? accent
                     : alpha(theme.palette.text.secondary, 0.22)
                 }`,
                 backgroundColor: isSelected
-                  ? alpha(theme.palette.success.main, 0.12)
+                  ? alpha(accent, 0.12)
                   : alpha(theme.palette.background.paper, 0.4),
                 color: isSelected
-                  ? theme.palette.success.main
+                  ? accent
                   : theme.palette.text.secondary,
                 "&:hover": {
-                  borderColor: theme.palette.success.main,
+                  borderColor: accent,
                   backgroundColor: isSelected
-                    ? alpha(theme.palette.success.main, 0.15)
-                    : alpha(theme.palette.success.main, 0.06),
-                  color: theme.palette.success.main,
+                    ? alpha(accent, 0.15)
+                    : alpha(accent, 0.06),
+                  color: accent,
                 },
               }}
             >
               {meta.icon}
               <Typography
                 variant="caption"
-                sx={{ fontWeight: isSelected ? 700 : 500, whiteSpace: "nowrap" }}
+                sx={{
+                  fontWeight: isSelected ? 700 : 500,
+                  whiteSpace: { xs: "normal", sm: "nowrap" },
+                  textAlign: "center",
+                }}
               >
                 {path.title}
               </Typography>

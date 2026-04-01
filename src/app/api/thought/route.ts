@@ -37,24 +37,26 @@ The JSON must follow this exact structure:
     "summary": "A short, gentle explanation of what you noticed in the thought"
   },
   "paths": [
-    {
-      "type": "worst_case",
-      "title": "Worst Case",
-      "description": "A compassionate description of the worst case scenario",
-      "feeling": "How this scenario might feel emotionally"
+  {
+      "type": "positive",
+      "title": "A Kinder Perspective",
+      "description": "A gentle, hopeful reframe of the situation",
+      "feeling": "How this perspective might feel emotionally"
     },
+    
     {
       "type": "most_likely",
       "title": "Most Likely",
       "description": "A grounded, realistic description of what will probably happen",
       "feeling": "How this scenario might feel emotionally"
     },
-    {
-      "type": "positive",
-      "title": "A Kinder Perspective",
-      "description": "A gentle, hopeful reframe of the situation",
-      "feeling": "How this perspective might feel emotionally"
-    }
+    
+      {
+      "type": "worst_case",
+      "title": "Worst Case",
+      "description": "A compassionate description of the worst case scenario",
+      "feeling": "How this scenario might feel emotionally"
+    },
   ]
 }
 
